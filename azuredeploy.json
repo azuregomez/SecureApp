@@ -7,7 +7,21 @@
             "metadata": {
               "description": "Prefix for naming resources"
           }
-        },          
+        },
+         "_artifactsLocation": {
+            "type": "string",
+            "metadata": {
+                "description": "The base URI where artifacts required by this template are located including a trailing '/'"
+            },
+            "defaultValue": "https://raw.githubusercontent.com/azuregomez/SecureApp/main/"
+        },
+        "_artifactsLocationSasToken": {
+            "type": "secureString",
+            "metadata": {
+                "description": "The sasToken required to access _artifactsLocation.  When the template is deployed using the accompanying scripts, a sasToken will be automatically generated. Use the defaultValue if the staging location is not secured."
+            },
+            "defaultValue": ""
+        },
         "vnetName": {
             "type": "string",
             "defaultValue": "[concat(parameters('resourceNamePrefix'),'-vnet')]",
@@ -152,14 +166,7 @@
             "metadata":{
                 "description": "Link name between your Private Endpoint and your Web App"
             }
-        },
-        "webPrivateDNSZoneName": {
-            "type": "string",
-            "defaultValue": "privatelink.azurewebsites.net",
-            "metadata":{
-                "description": "Name must be privatelink.azurewebsites.net"
-            }
-        },
+        },       
         "sourceCodeZipUrl":{
           "type": "string",
           "defaultValue": "https://storagegomez.blob.core.windows.net/public/persondemo.zip",
@@ -269,7 +276,8 @@
           }
         }
     },
-    "variables":{                           
+    "variables":{
+      "privateLinkNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/privatelink.json', parameters('_artifactsLocationSasToken')))]",               
       "delegatedSubnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('appServiceOutboundSubnetName'))]",
       "wafSubnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('wafSubnetName'))]",
       "wafPublicIPName": "[concat(parameters('appgwyName'),'-vip')]",
@@ -450,75 +458,46 @@
           ]
     },    
     {
-        "type": "Microsoft.Network/privateEndpoints",
-        "apiVersion": "2019-04-01",
-        "name": "[parameters('webPrivateEndpointName')]",
-        "location": "[resourceGroup().location]",
-        "dependsOn": [
-            "[resourceId('Microsoft.Web/sites', parameters('webAppName'))]",
-            "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetname'))]"
-        ],
-        "properties": {
-            "subnet": {
-                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetname'), parameters('appServiceInboundSubnetName'))]"
-            },
-            "privateLinkServiceConnections": [
-                {
-                    "name": "[parameters('webPrivateLinkConnectionName')]",
-                    "properties": {
-                        "privateLinkServiceId": "[resourceId('Microsoft.Web/sites', parameters('webAppName'))]",
-                        "groupIds": [
-                            "sites"
-                        ]
-                    }
-                }
-            ]
-        } 
-    },
-    {
-            "type": "Microsoft.Network/privateDnsZones",
-            "apiVersion": "2018-09-01",
-            "name": "[parameters('webPrivateDNSZoneName')]",
-            "location": "global",
+            "comments": "privatelink.json nested ARM template for Web",
+            "name": "linkedTemplate-web-private-link",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-06-01",
             "dependsOn": [
-                "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"    
-            ],
-            "properties" : {}
-    },
-    {
-            "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
-            "apiVersion": "2018-09-01",
-            "name": "[concat(parameters('webPrivateDNSZoneName'), '/', parameters('webPrivateDNSZoneName'), '-link')]",
-            "location": "global",
-            "dependsOn": [
-                "[resourceId('Microsoft.Network/privateDnsZones', parameters('webPrivateDNSZoneName'))]",
-                "[resourceId('Microsoft.Network/virtualNetworks', parameters('vNetname'))]"
+                "[resourceId('Microsoft.Web/sites', parameters('webAppName'))]",
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetname'))]"                
             ],
             "properties": {
-                "registrationEnabled": false,
-                "virtualNetwork": {
-                    "id": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vNetname'))]"
-                }
-            }
-    },
-    {
-            "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
-            "apiVersion": "2020-03-01",
-            "name": "[concat(parameters('webPrivateEndpointname'),'/dnsgroupname')]",
-            "location": "[resourceGroup().location]",
-            "dependsOn": [
-               "[resourceId('Microsoft.Network/privateDnsZones', parameters('webPrivateDNSZonename'))]",
-               "[resourceId('Microsoft.Network/privateEndpoints' , parameters('webPrivateEndpointname'))]"
-             ],
-            "properties": {
-                "privateDnsZoneConfigs": [
-                    {
-                        "name": "config1",
-                        "properties": {
-                             "privateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', parameters('webPrivateDNSZonename'))]"
-                        }
+                "mode": "Incremental",
+                "templateLink": {
+                    "contentVersion": "1.0.0.0",
+                    "uri": "[variables('privateLinkNestedTemplateUri')]"
+                },
+                "parameters": {
+                    "prefix":{
+                        "value": "[parameters('resourceNamePrefix')]"
+                    },
+                    "suffix": {
+                        "value": "web"
+                    },                   
+                    "resourceType": {
+                        "value": "Microsoft.Web/sites"
+                    },
+                    "resourceName": {
+                        "value": "[parameters('webAppName')]"
+                    },
+                    "groupType": {
+                        "value": "sites"
+                    },
+                    "vnet" :{
+                        "value": "[parameters('vnetName')]"
+                    },
+                    "subnet": {
+                        "value": "[parameters('appServiceInboundSubnetName')]"
+                    },
+                    "privateDNSZoneName": {
+                        "value": "privatelink.azurewebsites.net"
                     }
-                ]
+                }
             }
     },
     {
@@ -590,6 +569,49 @@
       ]
     },
     {
+            "comments": "privatelink.json nested ARM template for SQL",
+            "name": "linkedTemplate-sql-private-link",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-06-01",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('sqlServerName'))]",
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetname'))]"                
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "contentVersion": "1.0.0.0",
+                    "uri": "[variables('privateLinkNestedTemplateUri')]"
+                },
+                "parameters": {
+                    "prefix":{
+                        "value": "[parameters('resourceNamePrefix')]"
+                    },
+                    "suffix": {
+                        "value": "sql"
+                    },                   
+                    "resourceType": {
+                        "value": "Microsoft.Sql/servers"
+                    },
+                    "resourceName": {
+                        "value": "[parameters('sqlServerName')]"
+                    },
+                    "groupType": {
+                        "value": "sqlServer"
+                    },
+                    "vnet" :{
+                        "value": "[parameters('vnetName')]"
+                    },
+                    "subnet": {
+                        "value": "[parameters('sqlSubnetName')]"
+                    },
+                    "privateDNSZoneName": {
+                        "value": "privatelink.database.windows.net"
+                    }
+                }
+            }
+    },
+    {
       "comments": "Public IP for App Gateway",
       "apiVersion": "2017-08-01",
       "type": "Microsoft.Network/publicIPAddresses",
@@ -614,7 +636,7 @@
       "dependsOn": [
         "[concat('Microsoft.Network/publicIPAddresses/', variables('wafPublicIPName'))]",
         "[resourceId('Microsoft.Network/virtualNetworks/', parameters('vnetName'))]",
-        "[resourceId('Microsoft.Network/privateDnsZones/virtualNetworkLinks/',parameters('privateDNSZoneName'), concat(parameters('privateDNSZoneName'), '-link'))]"
+        "[resourceId('Microsoft.Network/privateDnsZones/virtualNetworkLinks/','privatelink.azurewebsites.net', concat('privatelink.azurewebsites.net', '-link'))]"
       ],
       "properties": {
         "sku": {
