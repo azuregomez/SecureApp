@@ -1,0 +1,35 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+         "vnet": {
+            "type": "string",
+            "metadata": {
+                "description": "name of subnet"
+            }
+        },
+        "privateDNSZoneName": {
+            "type": "string",
+            "metadata": {
+                "description": "privatelink.whatever.net"
+            }
+        }
+    },
+     "resources": [     
+          {
+                    "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+                    "apiVersion": "2018-09-01",
+                    "name": "[concat(parameters('privateDNSZoneName'), '/', parameters('privateDNSZoneName'), '-link')]",
+                    "location": "global",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Network/privateDnsZones', parameters('privateDNSZoneName'))]"                     
+                    ],
+                    "properties": {
+                        "registrationEnabled": false,
+                        "virtualNetwork": {
+                            "id": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnet'))]"
+                        }
+                    }
+            }   
+     ]
+}

@@ -22,16 +22,30 @@
             },
             "defaultValue": ""
         },
-        "vnetName": {
+        "hubVnetName": {
             "type": "string",
-            "defaultValue": "[concat(parameters('resourceNamePrefix'),'-vnet')]",
+            "defaultValue": "[concat(parameters('resourceNamePrefix'),'-hub-vnet')]",
             "metadata": {
               "description": "Name of VNET"
             }
         },       
-        "vnetAddressPrefix": {
+        "hubVnetAddressPrefix": {
             "type": "string",
             "defaultValue": "10.10.0.0/16",
+            "metadata": {
+              "description": "VNet Address prefix"
+            }
+        },
+         "spokeVnetName": {
+            "type": "string",
+            "defaultValue": "[concat(parameters('resourceNamePrefix'),'-spoke-vnet')]",
+            "metadata": {
+              "description": "Name of VNET"
+            }
+        },       
+        "spokeVnetAddressPrefix": {
+            "type": "string",
+            "defaultValue": "10.20.0.0/16",
             "metadata": {
               "description": "VNet Address prefix"
             }
@@ -52,14 +66,14 @@
         },
         "appServiceInboundSubnetPrefix": {
             "type": "string",
-            "defaultValue": "10.10.2.0/24",
+            "defaultValue": "10.20.2.0/24",
             "metadata": {
               "description": "ASE Subnet Inbound Address prefix"
             }
         },       
          "appServiceOutboundSubnetPrefix": {
             "type": "string",
-            "defaultValue": "10.10.3.0/24",
+            "defaultValue": "10.20.3.0/24",
             "metadata": {
               "description": "ASE Subnet Inbound Address prefix"
             }
@@ -94,7 +108,7 @@
         },
         "sqlSubnetPrefix": {
             "type": "string",
-            "defaultValue": "10.10.10.0/24",
+            "defaultValue": "10.20.10.0/24",
             "metadata": {
               "description": "Firewall subnet Address prefix"
             }
@@ -209,27 +223,6 @@
             "description": "sql server bacpac location"
           }
         },
-        "sqlPrivateEndpointName": {
-            "type": "string",
-            "defaultValue": "[concat(parameters('resourceNamePrefix'),'-sql-pep')]",
-            "metadata":{
-                "description": "Name of your SQL Private Endpoint"
-            }
-        },
-        "sqlPrivateLinkConnectionName": {
-            "type": "string",
-            "defaultValue": "[concat(parameters('resourceNamePrefix'),'-sql-plink')]",
-            "metadata":{
-                "description": "Link name between your Private Endpoint and SQLDB"
-            }
-        },
-        "sqlPrivateDNSZoneName": {
-            "type": "string",
-            "defaultValue": "privatelink.database.windows.net",
-            "metadata":{
-                "description": "Name must be privatelink.database.windows.net"
-            }
-        },
         "appgwyName":{
           "type": "string",
           "defaultValue": "[concat(parameters('resourceNamePrefix'),'-appgwy')]",
@@ -277,30 +270,60 @@
         }
     },
     "variables":{
-      "privateLinkNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/privatelink.json', parameters('_artifactsLocationSasToken')))]",               
-      "delegatedSubnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('appServiceOutboundSubnetName'))]",
-      "wafSubnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('wafSubnetName'))]",
-      "wafPublicIPName": "[concat(parameters('appgwyName'),'-vip')]",
-      "wafPublicIPRef": "[resourceId('Microsoft.Network/publicIPAddresses',variables('wafPublicIPName'))]",
-      "wafMode": "Prevention",
-      "applicationGatewayID": "[resourceId('Microsoft.Network/applicationGateways',parameters('appgwyName'))]",
-      "applicationGatewaySize":"WAF_v2",
-      "applicationGatewayCapacity":2,
+      "privateLinkNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/privatelink.json', parameters('_artifactsLocationSasToken')))]",
+      "dnsvnetlinkNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/dnsvnetlink.json', parameters('_artifactsLocationSasToken')))]",
+      "appgatewayNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/appgateway.json', parameters('_artifactsLocationSasToken')))]",
+      "delegatedSubnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('spokevnetName'), parameters('appServiceOutboundSubnetName'))]",
+      "wafSubnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('hubvnetName'), parameters('wafSubnetName'))]",                              
       "sqldbConnectionStringName": "dbcnstr",
       "sqlConnectionStringResourceId" : "[resourceId('Microsoft.KeyVault/vaults/secrets',parameters('keyvaultname'),variables('sqldbConnectionStringName'))]",      
       "secretsqlcnstr": "[concat('Server=tcp:',parameters('sqlServerName'),'.database.windows.net,1433;Initial Catalog=',parameters('sqldatabasename'), ';User ID=', parameters('sqlAdministratorLogin'), ';Password=', parameters('sqlAdministratorPassword'),';')]"
     },
     "resources": [        
     {
-        "comments": "VNet and Subnets",
+        "comments": "Hub VNet",
         "apiVersion": "2018-04-01",
         "type": "Microsoft.Network/virtualNetworks",
-        "name": "[parameters('vnetName')]",
+        "name": "[parameters('hubVnetName')]",
         "location": "[resourcegroup().location]",        
         "properties": {
             "addressSpace": {
             "addressPrefixes": [
-              "[parameters('vnetAddressPrefix')]"
+              "[parameters('hubVnetAddressPrefix')]"
+            ]
+          },
+        "subnets": [           
+            {
+              "name": "[parameters('wafSubnetName')]",
+              "properties": {
+                "addressPrefix": "[parameters('wafSubnetPrefix')]"               
+              }              
+            },
+            {
+              "name": "AzureFirewallSubnet",
+              "properties": {
+                "addressPrefix": "[parameters('firewallSubnetPrefix')]"                
+              }              
+            },            
+            {
+              "name": "[parameters('bastionSubnetName')]",
+              "properties": {
+                "addressPrefix": "[parameters('bastionSubnetPrefix')]"                
+              }              
+            }
+        ]    
+      }        
+    },      
+    {
+        "comments": "Spoke VNet",
+        "apiVersion": "2018-04-01",
+        "type": "Microsoft.Network/virtualNetworks",
+        "name": "[parameters('SpokeVnetName')]",
+        "location": "[resourcegroup().location]",        
+        "properties": {
+            "addressSpace": {
+            "addressPrefixes": [
+              "[parameters('SpokeVnetAddressPrefix')]"
             ]
           },
         "subnets": [
@@ -343,32 +366,15 @@
               }
             },            
             {
-              "name": "[parameters('wafSubnetName')]",
-              "properties": {
-                "addressPrefix": "[parameters('wafSubnetPrefix')]"               
-              }              
-            },
-            {
-              "name": "AzureFirewallSubnet",
-              "properties": {
-                "addressPrefix": "[parameters('firewallSubnetPrefix')]"                
-              }              
-            },
-            {
               "name": "[parameters('sqlSubnetName')]",
               "properties": {
-                "addressPrefix": "[parameters('sqlSubnetPrefix')]"                
-              }              
-            },
-            {
-              "name": "[parameters('bastionSubnetName')]",
-              "properties": {
-                "addressPrefix": "[parameters('bastionSubnetPrefix')]"                
+                "addressPrefix": "[parameters('sqlSubnetPrefix')]",
+                "privateEndpointNetworkPolicies": "Disabled"                
               }              
             }
         ]    
       }        
-    },      
+    },
     {
         "comments": "App Service Plan",
         "apiVersion": "2018-02-01",
@@ -390,8 +396,7 @@
         "name": "[parameters('webAppName')]",
         "location": "[resourceGroup().location]",       
         "dependsOn": [          
-          "[concat('Microsoft.Web/serverFarms/',parameters('appServicePlanName'))]",
-          "[concat('Microsoft.Network/publicIPAddresses/',variables('wafPublicIPName'))]"                   
+          "[concat('Microsoft.Web/serverFarms/',parameters('appServicePlanName'))]"                         
         ],
         "identity": {
           "type": "SystemAssigned"
@@ -431,7 +436,7 @@
               "location": "[resourcegroup().location]",    
               "dependsOn": [
                 "[concat('Microsoft.Web/sites/', parameters('webAppName'))]",
-                "[concat('Microsoft.Network/virtualNetworks/', parameters('vnetName'))]"
+                "[concat('Microsoft.Network/virtualNetworks/', parameters('spokevnetName'))]"
               ],
               "properties":
               {
@@ -464,7 +469,7 @@
             "apiVersion": "2020-06-01",
             "dependsOn": [
                 "[resourceId('Microsoft.Web/sites', parameters('webAppName'))]",
-                "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetname'))]"                
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('spokevnetname'))]"                
             ],
             "properties": {
                 "mode": "Incremental",
@@ -489,7 +494,7 @@
                         "value": "sites"
                     },
                     "vnet" :{
-                        "value": "[parameters('vnetName')]"
+                        "value": "[parameters('spokevnetName')]"
                     },
                     "subnet": {
                         "value": "[parameters('appServiceInboundSubnetName')]"
@@ -505,7 +510,7 @@
       "type": "Microsoft.Sql/servers",
       "location": "[resourceGroup().location]",
       "dependsOn": [          
-        "[resourceId('Microsoft.Network/virtualNetworks/', parameters('vnetName'))]"
+        "[resourceId('Microsoft.Network/virtualNetworks/', parameters('spokevnetName'))]"
       ],
       "tags": {
         "displayName": "SqlServer"
@@ -575,7 +580,7 @@
             "apiVersion": "2020-06-01",
             "dependsOn": [
                 "[resourceId('Microsoft.Sql/servers', parameters('sqlServerName'))]",
-                "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetname'))]"                
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('spokevnetname'))]"                
             ],
             "properties": {
                 "mode": "Incremental",
@@ -600,7 +605,7 @@
                         "value": "sqlServer"
                     },
                     "vnet" :{
-                        "value": "[parameters('vnetName')]"
+                        "value": "[parameters('spokevnetName')]"
                     },
                     "subnet": {
                         "value": "[parameters('sqlSubnetName')]"
@@ -612,153 +617,117 @@
             }
     },
     {
-      "comments": "Public IP for App Gateway",
-      "apiVersion": "2017-08-01",
-      "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[variables('wafPublicIPName')]",
-      "location": "[resourceGroup().location]",  
-      "sku":{
-        "name":"Standard"
-      },
-      "properties": {
-        "publicIPAllocationMethod": "Static",
-        "dnsSettings": {
-          "domainNameLabel": "[parameters('resourceNamePrefix')]"
-        }
-      }
+            "comments": "dnsvnetlink.json nested ARM template for Web/Spoke",
+            "name": "linkedTemplate-web-hub-vnet-link",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-06-01",
+            "dependsOn": [
+                "linkedTemplate-web-private-link"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "contentVersion": "1.0.0.0",
+                    "uri": "[variables('dnsvnetLinkNestedTemplateUri')]"
+                },
+                "parameters": {                   
+                    "vnet" :{
+                        "value": "[parameters('spokevnetName')]"
+                    },                    
+                    "privateDNSZoneName": {
+                        "value": "privatelink.azurewebsites.net"
+                    }
+                }
+            }
     },
     {
-      "comments": "App Gateway",
-      "apiVersion": "2018-12-01",
-      "name": "[parameters('appgwyName')]",
-      "type": "Microsoft.Network/applicationGateways",
-      "location": "[resourceGroup().location]",
-      "dependsOn": [
-        "[concat('Microsoft.Network/publicIPAddresses/', variables('wafPublicIPName'))]",
-        "[resourceId('Microsoft.Network/virtualNetworks/', parameters('vnetName'))]",
-        "linkedTemplate-web-private-link"
-      ],
-      "properties": {
-        "sku": {
-          "name": "[variables('applicationGatewaySize')]",
-          "tier": "WAF_v2",
-          "capacity": "[variables('applicationGatewayCapacity')]"
-        },
-        "gatewayIPConfigurations": [
-          {
-            "name": "appGatewayIpConfig",
+            "comments": "dnsvnetlink.json nested ARM template for Web/Hub",
+            "name": "linkedTemplate-web-spoke-vnet-link",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-06-01",
+            "dependsOn": [
+                "linkedTemplate-web-private-link"
+            ],
             "properties": {
-              "subnet": {
-                "id": "[variables('wafSubnetRef')]"
-              }
-            }
-          }
-        ],
-        "frontendIPConfigurations": [
-          {
-            "name": "appGatewayFrontendIP",
-            "properties": {
-              "PublicIPAddress": {
-                "id": "[variables('wafPublicIPRef')]"
-              }
-            }
-          }
-        ],
-        "frontendPorts": [
-          {
-            "name": "appGatewayFrontendPort",
-            "properties": {
-              "Port": 80
-            }
-          }
-        ],
-        "backendAddressPools": [
-          {
-            "name": "appGatewayBackendPool",
-            "properties": {
-              "BackendAddresses": [
-                {
-                  "fqdn": "[concat(parameters('webAppName'),'.azurewebsites.net')]"
+                "mode": "Incremental",
+                "templateLink": {
+                    "contentVersion": "1.0.0.0",
+                    "uri": "[variables('dnsvnetLinkNestedTemplateUri')]"
+                },
+                "parameters": {                   
+                    "vnet" :{
+                        "value": "[parameters('hubvnetName')]"
+                    },                    
+                    "privateDNSZoneName": {
+                        "value": "privatelink.azurewebsites.net"
+                    }
                 }
-              ]
             }
-          }
-        ],
-        "backendHttpSettingsCollection": [
-          {
-            "name": "appGatewayBackendHttpSettings",
-            "properties": {
-              "Port": 80,
-              "Protocol": "Http",
-              "CookieBasedAffinity": "Disabled",
-              "pickHostNameFromBackendAddress": true,              
-              "probe": {
-                "id": "[concat(variables('applicationGatewayID'), '/probes/agProbe1')]"
-              }
-            }
-          }
-        ],
-        "httpListeners": [
-          {
-            "name": "appGatewayHttpListener",
-            "properties": {
-              "FrontendIPConfiguration": {
-                "Id": "[concat(variables('applicationGatewayID'), '/frontendIPConfigurations/appGatewayFrontendIP')]"
-              },
-              "FrontendPort": {
-                "Id": "[concat(variables('applicationGatewayID'), '/frontendPorts/appGatewayFrontendPort')]"
-              },
-              "Protocol": "Http"              
-            }
-          }
-        ],
-        "probes": [
-          {
-            "properties": {
-              "protocol": "Http",
-              "pickHostNameFromBackendHttpSettings": true,              
-              "path": "/",
-              "interval": 30,
-              "timeout": 120,
-              "unhealthyThreshold": 8
-            },
-            "name": "agProbe1"
-          }
-        ],                     
-        "requestRoutingRules": [
-          {
-            "Name": "rule1",
-            "properties": {
-              "RuleType": "Basic",
-              "httpListener": {
-                "id": "[concat(variables('applicationGatewayID'), '/httpListeners/appGatewayHttpListener')]"
-              },
-              "backendAddressPool": {
-                "id": "[concat(variables('applicationGatewayID'), '/backendAddressPools/appGatewayBackendPool')]"
-              },
-              "backendHttpSettings": {
-                "id": "[concat(variables('applicationGatewayID'), '/backendHttpSettingsCollection/appGatewayBackendHttpSettings')]"
-              }
-            }
-          }
-        ],
-        "webApplicationFirewallConfiguration": {
-          "enabled": true,
-          "firewallMode": "[variables('wafMode')]",
-          "ruleSetType": "OWASP",
-          "ruleSetVersion": "3.0",
-          "disabledRuleGroups": [ ]
-        }
-      }
     },
-     {
+    {
+            "comments": "dnsvnetlink.json nested ARM template for SQL/Spoke",
+            "name": "linkedTemplate-sql-hub-vnet-link",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-06-01",
+            "dependsOn": [
+                "linkedTemplate-sql-private-link"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "contentVersion": "1.0.0.0",
+                    "uri": "[variables('dnsvnetLinkNestedTemplateUri')]"
+                },
+                "parameters": {                   
+                    "vnet" :{
+                        "value": "[parameters('spokevnetName')]"
+                    },                    
+                    "privateDNSZoneName": {
+                        "value": "privatelink.database.windows.net"
+                    }
+                }
+            }
+    },        
+    {
+            "comments": "appgateway.json nested ARM template for App Gateway",
+            "name": "linkedTemplate-appgateway",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-06-01",
+            "dependsOn": [                
+                "[resourceId('Microsoft.Network/virtualNetworks/', parameters('hubvnetName'))]",
+                "[resourceId('Microsoft.Network/virtualNetworks/', parameters('spokevnetName'))]",
+                "linkedTemplate-web-hub-vnet-link"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "contentVersion": "1.0.0.0",
+                    "uri": "[variables('appgatewayNestedTemplateUri')]"
+                },
+                "parameters": {                   
+                    "prefix" :{
+                        "value": "[parameters('resourceNamePrefix')]"
+                    },                                        
+                    "appgwyName": {
+                        "value": "[parameters('appgwyName')]"
+                    },
+                    "webAppName": {
+                        "value": "[parameters('webAppName')]"
+                    },
+                    "wafSubnetRef": {
+                        "value": "[variables('wafSubnetRef')]"
+                    }
+                }
+            }
+    },
+    {
       "comments": "Key Vault",
       "type": "Microsoft.KeyVault/vaults",
       "name": "[parameters('keyVaultName')]",
       "apiVersion": "2019-09-01",
       "location": "[resourceGroup().location]",
       "dependsOn": [          
-        "[resourceId('Microsoft.Network/virtualNetworks/', parameters('vnetName'))]",
+        "[resourceId('Microsoft.Network/virtualNetworks/', parameters('spokevnetName'))]",
         "[resourceId('Microsoft.Web/sites', parameters('webAppName'))]"
       ],
       "properties": {
