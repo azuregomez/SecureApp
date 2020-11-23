@@ -636,7 +636,7 @@
       "dependsOn": [
         "[concat('Microsoft.Network/publicIPAddresses/', variables('wafPublicIPName'))]",
         "[resourceId('Microsoft.Network/virtualNetworks/', parameters('vnetName'))]",
-        "[resourceId('Microsoft.Network/privateDnsZones/virtualNetworkLinks/','privatelink.azurewebsites.net', concat('privatelink.azurewebsites.net', '-link'))]"
+        "linkedTemplate-web-private-link"
       ],
       "properties": {
         "sku": {

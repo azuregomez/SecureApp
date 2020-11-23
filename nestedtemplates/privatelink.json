@@ -107,7 +107,7 @@
                     "location": "[resourceGroup().location]",
                     "dependsOn": [
                         "[resourceId('Microsoft.Network/privateDnsZones', parameters('privateDNSZonename'))]",
-                        "[resourceId('Microsoft.Network/privateEndpoints' , variables('privateEndpointConnectionName'))]"
+                        "[resourceId('Microsoft.Network/privateEndpoints' , variables('privateEndpointName'))]"
                     ],
                     "properties": {
                         "privateDnsZoneConfigs": [
