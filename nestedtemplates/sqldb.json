@@ -38,10 +38,7 @@
         {
       "name": "[parameters('sqlserverName')]",
       "type": "Microsoft.Sql/servers",
-      "location": "[resourceGroup().location]",
-      "dependsOn": [          
-       
-      ],
+      "location": "[resourceGroup().location]",      
       "tags": {
         "displayName": "SqlServer"
       },
