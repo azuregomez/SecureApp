@@ -2,10 +2,10 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "prefix": {
+        "domainNameLabel": {
             "type": "string",
             "metadata": {
-                "description": "naming prefix"
+                "description": "domainNameLabel"
             }
         },
         "appgwyName": {
@@ -48,7 +48,7 @@
             "properties": {
                 "publicIPAllocationMethod": "Static",
                 "dnsSettings": {
-                "domainNameLabel": "[parameters('prefix')]"
+                "domainNameLabel": "[parameters('domainNameLabel')]"
                 }
             }
         },

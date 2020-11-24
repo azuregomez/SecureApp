@@ -1,0 +1,127 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "prefix": {
+            "type": "string"        
+        },  
+        "vnet": {
+            "type": "string",
+            "defaultValue": "[concat(parameters('prefix'),'-hub-vnet')]"
+        },          
+        "firewallName": {
+            "type": "string",
+            "defaultValue": "[concat(parameters('prefix'),'-firewall')]",
+            "metadata": {
+            "description": "Azure Firewall name"
+            }
+        },
+        "numberOfPublicIPAddresses": {
+            "type": "int",
+            "defaultValue": 1,
+            "metadata": {
+            "description": "Number of public IP addresses"
+            }
+        },        
+        "availabilityZones": {
+            "type": "array",
+            "defaultValue": ["1", "2", "3"],
+            "metadata": {
+            "description": "Zone numbers e.g. 1,2,3."
+            }
+        }
+    },
+    "variables": {
+      "azureFirewallSubnetName": "AzureFirewallSubnet",
+      "azureFirewallSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets',parameters('vnet'), variables('azureFirewallSubnetName'))]",
+      "azureFirewallSubnetJSON": "[json(format('{{\"id\": \"{0}\"}}', variables('azureFirewallSubnetId')))]",
+      "publicIPNamePrefix" : "[concat(parameters('prefix'), '-fw-')]",
+      "copy": [
+        {
+          "name": "azureFirewallIpConfigurations",
+          "count": "[parameters('numberOfPublicIPAddresses')]",
+          "input": {
+            "name": "[concat('IpConf', copyIndex('azureFirewallIpConfigurations'))]",
+            "properties": {
+              "subnet": "[if(equals(copyIndex('azureFirewallIpConfigurations'), 0), variables('azureFirewallSubnetJSON'), json('null'))]",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(variables('publicIPNamePrefix'), add(copyIndex('azureFirewallIpConfigurations'), 1)))]"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "resources": [     
+      {
+        "name": "[concat(variables('publicIPNamePrefix'), add(copyIndex(), 1))]",
+        "type": "Microsoft.Network/publicIPAddresses",
+        "apiVersion": "2020-05-01",
+        "location": "[resourceGroup().location]", 
+        "sku": {
+          "name": "Standard"
+        },
+        "properties": {
+          "publicIPAllocationMethod": "Static",
+          "publicIPAddressVersion": "IPv4"
+        },
+        "copy": {
+          "name": "publicIpCopy",
+          "count": "[parameters('numberOfPublicIPAddresses')]"
+        }
+      },
+      {
+        "apiVersion": "2020-05-01",
+        "type": "Microsoft.Network/azureFirewalls",
+        "name": "[parameters('firewallName')]",
+        "location": "[resourceGroup().location]", 
+        "zones": "[if(equals(length(parameters('availabilityZones')), 0), json('null'), parameters('availabilityZones'))]",
+        "dependsOn": [          
+          "publicIpCopy"
+        ],
+        "properties": {
+          "ipConfigurations": "[variables('azureFirewallIpConfigurations')]",
+          "applicationRuleCollections": [
+            {
+              "name": "appRc1",
+              "properties": {
+                "priority": 101,
+                "action": { "type": "Allow" },
+                "rules": [
+                  {
+                    "name": "appRule1",
+                    "protocols": [
+                      {
+                        "port": 80,
+                        "protocolType": "http"
+                      }
+                    ],
+                    "targetFqdns": [ "www.microsoft.com" ],
+                    "sourceAddresses": [ "10.0.0.0/24" ]
+                  }
+                ]
+              }
+            }
+          ],
+          "networkRuleCollections": [
+            {
+              "name": "netRc1",
+              "properties": {
+                "priority": 200,
+                "action": { "type": "Allow" },
+                "rules": [
+                  {
+                    "name": "netRule1",
+                    "protocols": [ "TCP" ],
+                    "sourceAddresses": [ "10.0.0.0/24" ],
+                    "destinationAddresses": [ "*" ],
+                    "destinationPorts": [ "8000-8999" ]
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }

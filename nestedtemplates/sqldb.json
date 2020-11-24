@@ -1,0 +1,107 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "sqlserverName": {
+            "type": "string",
+            "metadata": {
+                "description": "sqlserverName"
+            }
+        },
+         "sqlAdministratorLogin": {
+          "type": "string",          
+          "metadata": {
+              "description": "Username for SQL Admin."
+          }
+        },
+        "sqlAdministratorPassword": {
+            "type": "securestring",            
+            "metadata": {
+            "description": "Password for the SQL."
+            }
+        },
+        "sqlDatabaseName": {
+          "type": "string",          
+          "metadata": {
+            "description": "sql server db name."
+          }
+        },
+        "sqldatabaseBacpacUrl":{
+          "type": "string",          
+          "metadata": {
+            "description": "sql server bacpac location"
+          }
+        }
+    },
+    "variables" : {},
+    "resources": [
+        {
+      "name": "[parameters('sqlserverName')]",
+      "type": "Microsoft.Sql/servers",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [          
+       
+      ],
+      "tags": {
+        "displayName": "SqlServer"
+      },
+      "apiVersion": "2019-06-01-preview",
+      "properties": {
+        "administratorLogin": "[parameters('sqlAdministratorLogin')]",
+        "administratorLoginPassword": "[parameters('sqlAdministratorPassword')]",
+        "version": "12.0"
+      },
+      "resources": [
+        {
+          "type": "firewallRules",
+          "name": "AllowAllAzureIps",
+          "location": "[resourceGroup().location]",
+          "apiVersion": "2015-05-01-preview",
+          "dependsOn": [
+            "[parameters('sqlserverName')]"
+          ],
+          "properties": {
+              "startIpAddress": "0.0.0.0",
+              "endIpAddress": "0.0.0.0"
+          }
+        },
+        {
+          "name": "[parameters('sqldatabaseName')]",
+          "type": "databases",
+          "location": "[resourceGroup().location]",
+          "tags": {
+            "displayName": "Database"
+          },
+          "apiVersion": "2019-06-01-preview",
+          "dependsOn": [
+            "[parameters('sqlserverName')]"
+          ],
+          "properties": {
+            "edition": "Basic",
+            "collation": "SQL_Latin1_General_CP1_CI_AS",
+            "maxSizeBytes": 1073741824,
+            "requestedServiceObjectiveName": "Basic"
+          },
+          "resources": [
+            {
+                "name": "Import",
+                "type": "extensions",
+                "apiVersion": "2014-04-01",
+                "dependsOn": [
+                    "[resourceId('Microsoft.Sql/servers/databases', parameters('sqlserverName'), parameters('sqldatabaseName'))]"
+                ],
+                "properties": {
+                    "storageKeyType": "SharedAccessKey",
+                    "storageKey": "?",
+                    "storageUri": "[parameters('sqldatabaseBacpacUrl')]",
+                    "administratorLogin": "[parameters('sqlAdministratorLogin')]",
+                    "administratorLoginPassword": "[parameters('sqlAdministratorPassword')]",
+                    "operationMode": "Import"
+                }
+            }
+        ]
+        }       
+      ]
+    }
+    ]
+}

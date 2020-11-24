@@ -166,20 +166,6 @@
             "metadata": {
               "description": "The name of the web app that will be created."
             }
-        },
-        "webPrivateEndpointName": {
-            "type": "string",
-            "defaultValue": "[concat(parameters('resourceNamePrefix'),'-web-pep')]",
-            "metadata":{
-                "description": "Name of your Web Private Endpoint"
-            }
-        },
-        "webPrivateLinkConnectionName": {
-            "type": "string",
-            "defaultValue": "[concat(parameters('resourceNamePrefix'),'-web-plink')]",
-            "metadata":{
-                "description": "Link name between your Private Endpoint and your Web App"
-            }
         },       
         "sourceCodeZipUrl":{
           "type": "string",
@@ -273,6 +259,8 @@
       "privateLinkNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/privatelink.json', parameters('_artifactsLocationSasToken')))]",
       "dnsvnetlinkNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/dnsvnetlink.json', parameters('_artifactsLocationSasToken')))]",
       "appgatewayNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/appgateway.json', parameters('_artifactsLocationSasToken')))]",
+      "sqldbNestedTemplateUri" : "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/sqldb.json', parameters('_artifactsLocationSasToken')))]",
+      "azfirewallNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/firewall.json', parameters('_artifactsLocationSasToken')))]",
       "delegatedSubnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('spokevnetName'), parameters('appServiceOutboundSubnetName'))]",
       "wafSubnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('hubvnetName'), parameters('wafSubnetName'))]",                              
       "sqldbConnectionStringName": "dbcnstr",
@@ -506,75 +494,40 @@
             }
     },
     {
-      "name": "[parameters('sqlserverName')]",
-      "type": "Microsoft.Sql/servers",
-      "location": "[resourceGroup().location]",
-      "dependsOn": [          
-        "[resourceId('Microsoft.Network/virtualNetworks/', parameters('spokevnetName'))]"
-      ],
-      "tags": {
-        "displayName": "SqlServer"
-      },
-      "apiVersion": "2019-06-01-preview",
-      "properties": {
-        "administratorLogin": "[parameters('sqlAdministratorLogin')]",
-        "administratorLoginPassword": "[parameters('sqlAdministratorPassword')]",
-        "version": "12.0"
-      },
-      "resources": [
-        {
-          "type": "firewallRules",
-          "name": "AllowAllAzureIps",
-          "location": "[resourceGroup().location]",
-          "apiVersion": "2015-05-01-preview",
-          "dependsOn": [
-            "[parameters('sqlserverName')]"
-          ],
-          "properties": {
-              "startIpAddress": "0.0.0.0",
-              "endIpAddress": "0.0.0.0"
-          }
-        },
-        {
-          "name": "[parameters('sqldatabaseName')]",
-          "type": "databases",
-          "location": "[resourceGroup().location]",
-          "tags": {
-            "displayName": "Database"
-          },
-          "apiVersion": "2019-06-01-preview",
-          "dependsOn": [
-            "[parameters('sqlserverName')]"
-          ],
-          "properties": {
-            "edition": "Basic",
-            "collation": "SQL_Latin1_General_CP1_CI_AS",
-            "maxSizeBytes": 1073741824,
-            "requestedServiceObjectiveName": "Basic"
-          },
-          "resources": [
-            {
-                "name": "Import",
-                "type": "extensions",
-                "apiVersion": "2014-04-01",
-                "dependsOn": [
-                    "[resourceId('Microsoft.Sql/servers/databases', parameters('sqlserverName'), parameters('sqldatabaseName'))]"
-                ],
-                "properties": {
-                    "storageKeyType": "SharedAccessKey",
-                    "storageKey": "?",
-                    "storageUri": "[parameters('sqldatabaseBacpacUrl')]",
-                    "administratorLogin": "[parameters('sqlAdministratorLogin')]",
-                    "administratorLoginPassword": "[parameters('sqlAdministratorPassword')]",
-                    "operationMode": "Import"
+            "comments": "sqldb.json nested ARM template for SQL server and database with bacpac deployed",
+            "name": "linkedTemplate-sql-db",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-06-01",
+            "dependsOn": [                
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('spokevnetname'))]"                
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "contentVersion": "1.0.0.0",
+                    "uri": "[variables('sqldbNestedTemplateUri')]"
+                },
+                "parameters": {
+                    "sqlserverName":{
+                        "value": "[parameters('sqlServerName')]"
+                    },
+                    "sqlAdministratorLogin": {
+                        "value": "[parameters('sqlAdministratorLogin')]"
+                    },                   
+                    "sqlAdministratorPassword": {
+                        "value": "[parameters('sqlAdministratorPassword')]"
+                    },
+                    "sqlDatabaseName": {
+                        "value": "[parameters('sqlDatabaseName')]"
+                    },
+                    "sqldatabaseBacpacUrl": {
+                        "value": "[parameters('sqldatabaseBacpacUrl')]"
+                    }
                 }
             }
-        ]
-        }       
-      ]
     },
     {
-            "comments": "privatelink.json nested ARM template for SQL",
+            "comments": "privatelink.json nested ARM template for SQL endpoint",
             "name": "linkedTemplate-sql-private-link",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2020-06-01",
@@ -618,7 +571,7 @@
     },
     {
             "comments": "dnsvnetlink.json nested ARM template for Web/Spoke",
-            "name": "linkedTemplate-web-hub-vnet-link",
+            "name": "linkedTemplate-web-spoke-vnet-link",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2020-06-01",
             "dependsOn": [
@@ -634,15 +587,15 @@
                     "vnet" :{
                         "value": "[parameters('spokevnetName')]"
                     },                    
-                    "privateDNSZoneName": {
-                        "value": "privatelink.azurewebsites.net"
+                    "name": {
+                        "value": "web-dns-spoke-link"
                     }
                 }
             }
     },
     {
             "comments": "dnsvnetlink.json nested ARM template for Web/Hub",
-            "name": "linkedTemplate-web-spoke-vnet-link",
+            "name": "linkedTemplate-web-hub-vnet-link",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2020-06-01",
             "dependsOn": [
@@ -658,14 +611,14 @@
                     "vnet" :{
                         "value": "[parameters('hubvnetName')]"
                     },                    
-                    "privateDNSZoneName": {
-                        "value": "privatelink.azurewebsites.net"
+                    "name": {
+                        "value": "web-dns-hub-link"
                     }
                 }
             }
     },
     {
-            "comments": "dnsvnetlink.json nested ARM template for SQL/Spoke",
+            "comments": "dnsvnetlink.json nested ARM template for SQL/Spoke link",
             "name": "linkedTemplate-sql-hub-vnet-link",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2020-06-01",
@@ -682,8 +635,8 @@
                     "vnet" :{
                         "value": "[parameters('spokevnetName')]"
                     },                    
-                    "privateDNSZoneName": {
-                        "value": "privatelink.database.windows.net"
+                    "name": {
+                        "value": "sql-dns-hub-link"
                     }
                 }
             }
@@ -705,7 +658,7 @@
                     "uri": "[variables('appgatewayNestedTemplateUri')]"
                 },
                 "parameters": {                   
-                    "prefix" :{
+                    "domainNameLabel" :{
                         "value": "[parameters('resourceNamePrefix')]"
                     },                                        
                     "appgwyName": {
@@ -716,6 +669,27 @@
                     },
                     "wafSubnetRef": {
                         "value": "[variables('wafSubnetRef')]"
+                    }
+                }
+            }
+    },
+     {
+            "comments": "firewall.json nested ARM template for Az Firewall",
+            "name": "linkedTemplate-azfirewall",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-06-01",
+            "dependsOn": [                
+                "[resourceId('Microsoft.Network/virtualNetworks/', parameters('hubvnetName'))]"                
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "contentVersion": "1.0.0.0",
+                    "uri": "[variables('azfirewallNestedTemplateUri')]"
+                },
+                "parameters": {                   
+                    "prefix":{
+                        "value": "[parameters('resourceNamePrefix')]"
                     }
                 }
             }
