@@ -1,0 +1,52 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {    
+         "hubvnetName" : {
+            "type": "string"    
+         },
+         "spokevnetname" : {
+            "type": "string"    
+         }              
+    },
+    "variables" : {
+        "hubPeeringName": "[concat(parameters('hubvnetName'), '/peering-to-', parameters('spokevnetname'))]",           
+        "spokePeeringName": "[concat(parameters('spokevnetname'), '/peering-to-', parameters('hubvnetName'))]",
+        "spokeVNetRef": "[resourceId('Microsoft.Network/virtualNetworks', parameters('spokevnetname'))]",
+        "hubVNetRef": "[resourceId('Microsoft.Network/virtualNetworks', parameters('hubvnetName'))]"
+    },
+    "resources": [   
+        {
+            "comments": "Hub to Spoke Peering",
+            "apiVersion": "2020-05-01",
+            "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+            "name": "[variables('hubPeeringName')]",
+            "location": "[resourceGroup().location]",            
+            "properties": {
+                "allowVirtualNetworkAccess": true,
+                "allowForwardedTraffic": true,
+                "allowGatewayTransit": true,
+                "useRemoteGateways": false,
+                "remoteVirtualNetwork": {
+                    "id": "[variables('spokeVNetRef')]"
+                }
+            }
+        },
+        {
+                "comments": "Spoke to Hub Peering",
+                "apiVersion":  "2020-05-01",
+                "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+                "name": "[variables('spokePeeringName')]",
+                "location": "[resourceGroup().location]",                 
+                "properties": {
+                  "allowVirtualNetworkAccess": true,
+                  "allowForwardedTraffic": true,
+                  "allowGatewayTransit": false,
+                  "useRemoteGateways": true,
+                  "remoteVirtualNetwork": {
+                    "id": "[variables('hubVNetRef')]"
+                  }
+                }
+        }
+     ]
+}

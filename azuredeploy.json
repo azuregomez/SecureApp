@@ -260,12 +260,13 @@
       "dnsvnetlinkNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/dnsvnetlink.json', parameters('_artifactsLocationSasToken')))]",
       "appgatewayNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/appgateway.json', parameters('_artifactsLocationSasToken')))]",
       "sqldbNestedTemplateUri" : "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/sqldb.json', parameters('_artifactsLocationSasToken')))]",
-      "azfirewallNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/firewall.json', parameters('_artifactsLocationSasToken')))]",
+      "azfirewallNestedTemplateUri" : "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/firewall.json', parameters('_artifactsLocationSasToken')))]",
+      "vnetPeeringNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/vnetpeering.json', parameters('_artifactsLocationSasToken')))]",
       "delegatedSubnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('spokevnetName'), parameters('appServiceOutboundSubnetName'))]",
       "wafSubnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('hubvnetName'), parameters('wafSubnetName'))]",                              
       "sqldbConnectionStringName": "dbcnstr",
       "sqlConnectionStringResourceId" : "[resourceId('Microsoft.KeyVault/vaults/secrets',parameters('keyvaultname'),variables('sqldbConnectionStringName'))]",      
-      "secretsqlcnstr": "[concat('Server=tcp:',parameters('sqlServerName'),'.database.windows.net,1433;Initial Catalog=',parameters('sqldatabasename'), ';User ID=', parameters('sqlAdministratorLogin'), ';Password=', parameters('sqlAdministratorPassword'),';')]"
+      "secretsqlcnstr": "[concat('Server=tcp:',parameters('sqlServerName'),'.database.windows.net,1433;Initial Catalog=',parameters('sqldatabasename'), ';User ID=', parameters('sqlAdministratorLogin'), ';Password=', parameters('sqlAdministratorPassword'),';')]"      
     },
     "resources": [        
     {
@@ -362,6 +363,31 @@
             }
         ]    
       }        
+    },
+    {
+            "comments": "vnetpeering.json nested ARM template for VNet peering",
+            "name": "linkedTemplate-vnetpeering",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-06-01",
+            "dependsOn": [                
+                "[resourceId('Microsoft.Network/virtualNetworks/', parameters('hubvnetName'))]",                
+                "[resourceId('Microsoft.Network/virtualNetworks/', parameters('spokevnetName'))]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "contentVersion": "1.0.0.0",
+                    "uri": "[variables('vnetPeeringNestedTemplateUri')]"
+                },
+                "parameters": {                   
+                    "hubname":{
+                        "value": "[parameters('hubVnetName')]"
+                    },
+                    "spokename":{
+                        "value": "[parameters('spokeVnetName')]"
+                    }
+                }
+            }
     },
     {
         "comments": "App Service Plan",
@@ -682,7 +708,7 @@
                 }
             }
     },
-     {
+    {
             "comments": "firewall.json nested ARM template for Az Firewall",
             "name": "linkedTemplate-azfirewall",
             "type": "Microsoft.Resources/deployments",
