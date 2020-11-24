@@ -586,7 +586,10 @@
                 "parameters": {                   
                     "vnet" :{
                         "value": "[parameters('spokevnetName')]"
-                    },                                       
+                    },         
+                    "suffix" : {
+                        "value": "web-spoke-link"
+                    },                              
                      "privateDNSZoneName": {
                         "value": "privatelink.azurewebsites.net"
                     }
@@ -610,7 +613,10 @@
                 "parameters": {                   
                     "vnet" :{
                         "value": "[parameters('hubvnetName')]"
-                    },                                      
+                    },         
+                    "suffix" : {
+                        "value": "web-hub-link"
+                    },                             
                     "privateDNSZoneName": {
                         "value": "privatelink.azurewebsites.net"
                     }
@@ -635,6 +641,9 @@
                     "vnet" :{
                         "value": "[parameters('spokevnetName')]"
                     },                    
+                    "suffix" : {
+                        "value": "sql-link"
+                    },
                     "privateDNSZoneName": {
                         "value": "privatelink.database.windows.net"
                     }
