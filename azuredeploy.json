@@ -380,10 +380,10 @@
                     "uri": "[variables('vnetPeeringNestedTemplateUri')]"
                 },
                 "parameters": {                   
-                    "hubname":{
+                    "hubvnetName":{
                         "value": "[parameters('hubVnetName')]"
                     },
-                    "spokename":{
+                    "spokevnetname":{
                         "value": "[parameters('spokeVnetName')]"
                     }
                 }
