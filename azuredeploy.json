@@ -458,7 +458,7 @@
                     ],
                     "properties": {                                                
                          "[parameters('cnStringSecretName')]": {
-                            "value": "[concat('@Microsoft.KeyVault(SecretUri=', reference(variables('sqlConnectionStringResourceId')).secretUriWithVersion, ')')]",
+                            "value": "[concat('@Microsoft.KeyVault(SecretUri=',reference(resourceId('Microsoft.Resources/deployments', 'linkedTemplate-keyvault')).outputs.secretUri.value , ')')]",
                             "type": "SQLAzure"
                         }
                     }
