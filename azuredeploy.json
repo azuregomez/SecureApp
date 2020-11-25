@@ -453,8 +453,7 @@
                     "apiVersion": "2018-02-01",          
                     "dependsOn": [
                         "[resourceId('Microsoft.Web/sites', parameters('webAppName'))]",
-                        "[resourceId('Microsoft.KeyVault/vaults/', parameters('keyVaultName'))]",
-                        "[resourceId('Microsoft.KeyVault/vaults/secrets', parameters('keyVaultName'), variables('sqldbConnectionStringName'))]",
+                        "linkedTemplate-keyvault",
                         "MSDeploy"
                     ],
                     "properties": {                                                
