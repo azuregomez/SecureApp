@@ -139,9 +139,9 @@
       }
     ],
      "outputs": {
-        "privateIP": {
+        "ipConfigurationId": {
             "type": "string",
-            "value": "[reference(resourceId('Microsoft.Network/azureFirewalls', parameters('firewallName')), '2020-05-01').IpConfigurations[0].PrivateIpAddress]"
+            "value": "[reference(resourceId('Microsoft.Network/azureFirewalls', parameters('firewallName')), '2020-05-01').IpConfigurations[0].id]"
         }       
     }
   }
