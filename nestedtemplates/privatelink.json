@@ -53,7 +53,7 @@
     },
     "variables": {        
         "privateEndpointName": "[concat(parameters('prefix'), '-', parameters('suffix'), '-pep')]",
-        "privateEndpointConnectionName": "[concat(parameters('prefix'), '-', parameters('suffix'), '-pep-cxn')]"
+        "privateEndpointConnectionName": "[concat(parameters('prefix'), '-', parameters('suffix'), '-pep-cxn')]"        
     },
     "resources": [        
              {
@@ -112,6 +112,10 @@
             "type": "string",
             "value": "[reference(resourceId('Microsoft.Network/privateEndpoints', variables('privateEndpointName')), '2019-11-01').networkInterfaces[0].id]"
         },
+        "privateIP": {
+            "type": "string",
+            "value": "[reference(resourceId('Microsoft.Network/privateEndpoints', variables('privateEndpointName')), '2019-11-01').networkInterfaces[0].ipConfigurations[0].PrivateIpAddress]"
+        }, 
         "privateEndpointName": {
             "type": "string",
             "value": "[variables('privateEndpointName')]"

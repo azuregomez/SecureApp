@@ -16,7 +16,7 @@
         }
     },
     "variables": {
-            "notallowazservices" : "[concat(parameters('sqlservername'),'/','NotAllowAzureServices')]",
+            "notallowazservices" : "[concat(parameters('sqlservername'),'/','AllowAllAzureServices')]",
             "allowprivateendpoint" : "[concat(parameters('sqlservername'),'/','AllowPrivateEndpoint')]"
     },
     "resources": [

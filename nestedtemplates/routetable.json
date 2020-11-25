@@ -1,0 +1,43 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "routetablename": {
+            "type": "string",
+            "metadata": {
+                "description": "UDR name"
+            }
+        },
+        "addressprefix": {
+            "type": "string"           
+        },
+        "nexthoptype": {
+            "type": "string",
+            "defaultValue" : "VirtualAppliance"
+        },
+        "nexthopip": {
+            "type": "string"
+        }
+    },
+    "resources": [
+        {
+            "name": "[parameters('routetablename')]",
+            "type": "Microsoft.Network/routeTables",
+            "apiVersion": "2020-06-01",
+            "location": "[resourceGroup().location]",            
+            "properties": {
+                "routes": [
+                    {
+                    "id": "string",
+                    "properties": {
+                        "addressPrefix": "[parameters('addressprefix')]",
+                        "nextHopType": "[parameters('nexthoptype')]",
+                        "nextHopIpAddress":  "[parameters('nexthopip')]"
+                    },
+                    "name": "string"
+                    }
+                ] 
+            }          
+        }
+    ]
+}

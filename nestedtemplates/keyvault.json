@@ -44,10 +44,7 @@
         "secretvalue": {
              "type": "string"
         }
-    },
-    "variables": {
-
-    },
+    },   
     "resources": [
          {
       "comments": "Key Vault",

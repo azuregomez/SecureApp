@@ -245,6 +245,7 @@
       "azfirewallNestedTemplateUri" : "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/firewall.json', parameters('_artifactsLocationSasToken')))]",
       "vnetPeeringNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/vnetpeering.json', parameters('_artifactsLocationSasToken')))]",
       "sqlfirewallNestedTemplateUri" : "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/sqlfirewall.json', parameters('_artifactsLocationSasToken')))]",
+      "udrNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/routetable.json', parameters('_artifactsLocationSasToken')))]",
       "akvNestedTemplateUri" : "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/keyvault.json', parameters('_artifactsLocationSasToken')))]",
       "delegatedSubnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('spokevnetName'), parameters('appServiceOutboundSubnetName'))]",
       "wafSubnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('hubvnetName'), parameters('wafSubnetName'))]",                              
@@ -737,6 +738,12 @@
                 "parameters": {                   
                     "prefix":{
                         "value": "[parameters('resourceNamePrefix')]"
+                    },
+                    "allowSource":{
+                        "value": "[parameters('appServiceOutboundSubnetPrefix')]"
+                    },
+                    "allowTarget":{
+                        "value": "[parameters('sqlSubnetPrefix')]"
                     }
                 }
             }
@@ -771,6 +778,35 @@
                     },
                     "secretvalue":{
                         "value": "[variables('secretsqlcnstr')]"
+                    }
+                }
+            }
+    },
+     {
+            "comments": "routetable.json nested ARM template for UDR",
+            "name": "linkedTemplate-udr",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-06-01",
+            "dependsOn": [                
+                "[resourceId('Microsoft.Network/virtualNetworks/', parameters('spokevnetName'))]",
+                "linkedTemplate-azfirewall",
+                "linkedTemplate-sql-private-link"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "contentVersion": "1.0.0.0",
+                    "uri": "[variables('udrNestedTemplateUri')]"
+                },
+                "parameters": {                   
+                    "routetablename":{
+                        "value": "[concat(parameters('resourceNamePrefix'),'-sql-udr')]"
+                    },                    
+                    "addressprefix":{
+                        "value": "[concat(reference(resourceId('Microsoft.Resources/deployments', 'linkedTemplate-azfirewall')).outputs.privateIP.value,'/32')]"
+                    },
+                    "nexthopip":{
+                        "value": "[reference(resourceId('Microsoft.Resources/deployments', 'linkedTemplate-sql-private-link')).outputs.privateIP.value]"
                     }
                 }
             }

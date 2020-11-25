@@ -29,6 +29,18 @@
             "metadata": {
             "description": "Zone numbers e.g. 1,2,3."
             }
+        },
+        "allowSource": {
+            "type": "string",            
+            "metadata": {
+              "description": "Source address space for the allow network rule"
+            }
+        },
+        "allowTarget": {
+            "type": "string",            
+            "metadata": {
+              "description": "Source address space for the allow network rule"
+            }
         }
     },
     "variables": {
@@ -36,6 +48,8 @@
       "azureFirewallSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets',parameters('vnet'), variables('azureFirewallSubnetName'))]",
       "azureFirewallSubnetJSON": "[json(format('{{\"id\": \"{0}\"}}', variables('azureFirewallSubnetId')))]",
       "publicIPNamePrefix" : "[concat(parameters('prefix'), '-fw-')]",
+      "ruleCollectionName" : "sqlPrivateEndpoint",
+      "ruleName": "allowAppService",
       "copy": [
         {
           "name": "azureFirewallIpConfigurations",
@@ -104,18 +118,18 @@
             }
           ],
           "networkRuleCollections": [
-            {
-              "name": "netRc1",
+          {
+              "name": "[variables('ruleCollectionName')]",
               "properties": {
                 "priority": 200,
                 "action": { "type": "Allow" },
                 "rules": [
                   {
-                    "name": "netRule1",
+                    "name": "[variables('ruleName')]",
                     "protocols": [ "TCP" ],
-                    "sourceAddresses": [ "10.0.0.0/24" ],
-                    "destinationAddresses": [ "*" ],
-                    "destinationPorts": [ "8000-8999" ]
+                    "sourceAddresses": [ "[parameters('allowSource')]" ],
+                    "destinationAddresses": [ "[parameters('allowTarget')]" ],
+                    "destinationPorts": [ "*" ]
                   }
                 ]
               }
@@ -123,5 +137,11 @@
           ]
         }
       }
-    ]
+    ],
+     "outputs": {
+        "privateIP": {
+            "type": "string",
+            "value": "[reference(resourceId('Microsoft.Network/azureFirewalls', parameters('firewallName')), '2020-05-01').IpConfigurations.PrivateIpAddress]"
+        }       
+    }
   }
