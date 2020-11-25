@@ -1,0 +1,47 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "sqlserverName": {
+            "type": "string",
+            "metadata": {
+                "description": "sqlserverName"
+            }
+        },
+        "privateEndpointSubnetId": {
+            "type": "string",
+            "metadata": {
+                "description": "private link subnet id"
+            }
+        }
+    },
+    "variables": {
+            "notallowazservices" : "[concat(parameters('sqlservername'),'/','NotAllowAzureServices')]",
+            "allowprivateendpoint" : "[concat(parameters('sqlservername'),'/','AllowPrivateEndpoint')]"
+    },
+    "resources": [
+        {
+            "name": "[variables('allowprivateendpoint')]",
+            "type": "Microsoft.Sql/servers/virtualNetworkRules",
+            "apiVersion": "2015-05-01-preview",
+            "properties": {
+                "virtualNetworkSubnetId": "[parameters('privateEndpointSubnetId')]",
+                "ignoreMissingVnetServiceEndpoint": true
+            }
+        },
+        {
+            "comments": "255 = NOT Allow Azure Services and Resouces",
+            "type": "Microsoft.Sql/servers/firewallRules",
+            "name": "[variables('notallowazservices')]",
+            "dependsOn": [
+                 "[variables('allowprivateendpoint')]"
+            ],
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2015-05-01-preview",            
+            "properties": {
+                "startIpAddress": "255.255.255.255",
+                "endIpAddress": "255.255.255.255"
+            }
+        }
+    ]
+}

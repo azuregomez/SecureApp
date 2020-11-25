@@ -262,8 +262,10 @@
       "sqldbNestedTemplateUri" : "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/sqldb.json', parameters('_artifactsLocationSasToken')))]",
       "azfirewallNestedTemplateUri" : "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/firewall.json', parameters('_artifactsLocationSasToken')))]",
       "vnetPeeringNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/vnetpeering.json', parameters('_artifactsLocationSasToken')))]",
+      "sqlfirewallNestedTemplateUri" : "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/sqlfirewall.json', parameters('_artifactsLocationSasToken')))]",
       "delegatedSubnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('spokevnetName'), parameters('appServiceOutboundSubnetName'))]",
       "wafSubnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('hubvnetName'), parameters('wafSubnetName'))]",                              
+      "sqlSubnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('spokevnetName'), parameters('sqlSubnetName'))]",
       "sqldbConnectionStringName": "dbcnstr",
       "sqlConnectionStringResourceId" : "[resourceId('Microsoft.KeyVault/vaults/secrets',parameters('keyvaultname'),variables('sqldbConnectionStringName'))]",      
       "secretsqlcnstr": "[concat('Server=tcp:',parameters('sqlServerName'),'.database.windows.net,1433;Initial Catalog=',parameters('sqldatabasename'), ';User ID=', parameters('sqlAdministratorLogin'), ';Password=', parameters('sqlAdministratorPassword'),';')]"      
@@ -597,6 +599,30 @@
                     "privateDNSZoneName": {
                         "value": "privatelink.database.windows.net"
                     }
+                }
+            }
+    },
+     {
+            "comments": "sqlfirewall.json nested ARM template for SQL endpoint",
+            "name": "linkedTemplate-sql-firewall",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-06-01",
+            "dependsOn": [
+                "linkedTemplate-sql-private-link"                
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "contentVersion": "1.0.0.0",
+                    "uri": "[variables('sqlfirewallNestedTemplateUri')]"
+                },
+                "parameters": {
+                    "sqlserverName":{
+                        "value": "[parameters('sqlServerName')]"
+                    },
+                    "privateEndpointSubnetId": {
+                        "value": "[variables('sqlSubnetRef')]"
+                    }                    
                 }
             }
     },

@@ -46,12 +46,13 @@
       "properties": {
         "administratorLogin": "[parameters('sqlAdministratorLogin')]",
         "administratorLoginPassword": "[parameters('sqlAdministratorPassword')]",
-        "version": "12.0"
+        "version": "12.0",
+        "publicNetworkAccess" : "Disabled"
       },
       "resources": [
         {
           "type": "firewallRules",
-          "name": "AllowAllAzureIps",
+          "name": "AllowAllAzureServices",
           "location": "[resourceGroup().location]",
           "apiVersion": "2015-05-01-preview",
           "dependsOn": [
