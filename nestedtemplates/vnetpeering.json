@@ -7,7 +7,11 @@
          },
          "spokevnetname" : {
             "type": "string"    
-         }              
+         },
+         "gatewaytransit": {
+             "type": "bool",
+             "defaultValue" : true
+         }
     },
     "variables" : {
         "hubPeeringName": "[concat(parameters('hubvnetName'), '/peering-to-', parameters('spokevnetname'))]",           
@@ -25,7 +29,7 @@
             "properties": {
                 "allowVirtualNetworkAccess": true,
                 "allowForwardedTraffic": true,
-                "allowGatewayTransit": true,
+                "allowGatewayTransit": "[parameters('gatewaytransit')]",
                 "useRemoteGateways": false,
                 "remoteVirtualNetwork": {
                     "id": "[variables('spokeVNetRef')]"
@@ -42,7 +46,7 @@
                   "allowVirtualNetworkAccess": true,
                   "allowForwardedTraffic": true,
                   "allowGatewayTransit": false,
-                  "useRemoteGateways": true,
+                  "useRemoteGateways":  "[parameters('gatewaytransit')]",
                   "remoteVirtualNetwork": {
                     "id": "[variables('hubVNetRef')]"
                   }

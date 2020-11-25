@@ -385,6 +385,9 @@
                     },
                     "spokevnetname":{
                         "value": "[parameters('spokeVnetName')]"
+                    },
+                    "gatewaytransit":{
+                        "value": false
                     }
                 }
             }
