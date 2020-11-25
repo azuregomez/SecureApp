@@ -249,8 +249,7 @@
       "delegatedSubnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('spokevnetName'), parameters('appServiceOutboundSubnetName'))]",
       "wafSubnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('hubvnetName'), parameters('wafSubnetName'))]",                              
       "sqlSubnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('spokevnetName'), parameters('sqlSubnetName'))]",
-      "sqldbConnectionStringName": "dbcnstr",
-      "sqlConnectionStringResourceId" : "[resourceId('Microsoft.KeyVault/vaults/secrets',parameters('keyvaultname'),variables('sqldbConnectionStringName'))]",      
+      "sqldbConnectionStringName": "dbcnstr",      
       "secretsqlcnstr": "[concat('Server=tcp:',parameters('sqlServerName'),'.database.windows.net,1433;Initial Catalog=',parameters('sqldatabasename'), ';User ID=', parameters('sqlAdministratorLogin'), ';Password=', parameters('sqlAdministratorPassword'),';')]"      
     },
     "resources": [        

@@ -103,7 +103,7 @@
     "outputs": {
         "secretUri": {
             "type": "string",
-            "value": "[reference(resourceId('Microsoft.KeyVault/vaults/secrets',parameters('keyvaultname'),parameters('secretvalue'))).secretUriWithVersion]"
+            "value": "[reference(resourceId('Microsoft.KeyVault/vaults/secrets',parameters('keyvaultname'),parameters('secretname'))).secretUriWithVersion]"
         }
     }
 }
