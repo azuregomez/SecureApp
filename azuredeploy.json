@@ -453,13 +453,14 @@
               "location": "[resourcegroup().location]",    
               "dependsOn": [
                 "[concat('Microsoft.Web/sites/', parameters('webAppName'))]",
-                "[concat('Microsoft.Network/virtualNetworks/', parameters('spokevnetName'))]"
+                "[concat('Microsoft.Network/virtualNetworks/', parameters('spokevnetName'))]",
+                "MSDeploy"
               ],
               "properties":
-              {
-                  "subnetResourceId": "[variables('delegatedSubnetRef')]",
-                  "swiftSupported": true
-              }
+                {
+                    "subnetResourceId": "[variables('delegatedSubnetRef')]",
+                    "swiftSupported": true
+                }
             },
             {
                     "type": "config",
@@ -468,7 +469,8 @@
                     "dependsOn": [
                         "[resourceId('Microsoft.Web/sites', parameters('webAppName'))]",
                         "[resourceId('Microsoft.KeyVault/vaults/', parameters('keyVaultName'))]",
-                        "[resourceId('Microsoft.KeyVault/vaults/secrets', parameters('keyVaultName'), variables('sqldbConnectionStringName'))]"                   
+                        "[resourceId('Microsoft.KeyVault/vaults/secrets', parameters('keyVaultName'), variables('sqldbConnectionStringName'))]",
+                        "MSDeploy"
                     ],
                     "properties": {                                                
                          "[parameters('cnStringSecretName')]": {
