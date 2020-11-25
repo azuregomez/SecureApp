@@ -791,7 +791,7 @@
                 "[resourceId('Microsoft.Network/virtualNetworks/', parameters('spokevnetName'))]",
                 "linkedTemplate-azfirewall",
                 "linkedTemplate-sql-private-link"
-            ],
+            ],           
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -803,10 +803,10 @@
                         "value": "[concat(parameters('resourceNamePrefix'),'-sql-udr')]"
                     },                    
                     "addressprefix":{
-                        "value": "[concat(reference(resourceId('Microsoft.Resources/deployments', 'linkedTemplate-azfirewall')).outputs.privateIP.value,'/32')]"
+                        "value": "[concat(resourceId('Microsoft.Network/networkInterfaces',reference(resourceId('Microsoft.Resources/deployments', 'linkedTemplate-azfirewall')).outputs.privateLinkNicResource.value).ipConfigurations[0].PrivateIpAddress,'/32')]"                        
                     },
                     "nexthopip":{
-                        "value": "[reference(resourceId('Microsoft.Resources/deployments', 'linkedTemplate-sql-private-link')).outputs.privateIP.value]"
+                        "value": "[reference(resourceId('Microsoft.Resources/deployments', 'linkedTemplate-azfirewall')).outputs.privateIP.value]"
                     }
                 }
             }
