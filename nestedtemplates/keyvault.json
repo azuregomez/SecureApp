@@ -1,0 +1,103 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters" : {
+         "keyVaultName": {
+            "type": "string",
+            "metadata": {
+                "description": "AKV name"
+            }
+        },
+        "tenantId": {
+          "type": "string",
+          "defaultValue": "[subscription().tenantId]",
+          "metadata": {
+            "description": "Tenant Id of the subscription. Get using Get-AzureRmSubscription cmdlet or Get Subscription API"
+          }
+        },
+         "ADUserObjectID": {
+          "type": "string",
+          "metadata": {
+            "description": "Object Id of the AD user that is deploying. Get using Get-AzADUser or Get-AzADServicePrincipal cmdlets"
+          }
+        },
+         "webAppName": {
+            "type": "string",         
+            "metadata": {
+              "description": "The name of the web app that will be in the backend pool."
+            }
+        },
+         "vaultSkuName": {
+            "type": "string",
+            "defaultValue": "Standard",
+            "allowedValues": [
+                "Standard",
+                "Premium"
+            ],
+            "metadata": {
+                "description": "SKU for the vault"
+            }
+        },
+        "secretname": {
+             "type": "string"
+        },
+        "secretvalue": {
+             "type": "string"
+        }
+    },
+    "variables": {
+
+    },
+    "resources": [
+         {
+      "comments": "Key Vault",
+      "type": "Microsoft.KeyVault/vaults",
+      "name": "[parameters('keyVaultName')]",
+      "apiVersion": "2019-09-01",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [          
+       
+      ],
+      "properties": {
+        "enabledForDeployment": false,
+        "enabledForDiskEncryption": false,
+        "enabledForTemplateDeployment": false,
+        "tenantId": "[parameters('tenantId')]",
+        "accessPolicies": [
+          {
+            "tenantId": "[parameters('tenantId')]",
+            "objectId": "[parameters('ADUserObjectID')]",
+            "permissions": {
+              "keys": ["all"],
+              "secrets": ["all"]
+            }
+          },
+          {
+            "tenantId": "[parameters('tenantId')]",            
+            "objectId": "[reference(resourceId('Microsoft.Web/sites', parameters('webAppName')), '2016-03-01','Full').identity.principalId]",            
+            "permissions": {
+                   "secrets": [ "get" ]
+                }
+          }
+        ],
+        "sku": {
+          "name": "[parameters('vaultSkuName')]",
+          "family": "A"
+        }       
+      },
+      "resources" :[
+        {
+          "type": "secrets",
+          "name": "[parameters('secretname')]",
+          "apiVersion": "2019-09-01",
+          "dependsOn": [
+                        "[resourceId('Microsoft.KeyVault/vaults/', parameters('keyVaultName'))]"                        
+                    ],
+          "properties":{
+            "value" : "[parameters('secretvalue')]"
+          }
+        }
+      ]
+    } 
+    ]
+}

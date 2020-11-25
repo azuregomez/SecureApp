@@ -222,31 +222,13 @@
           "metadata": {
               "description": "Key Vault Name."
           }
-        },
-        "tenantId": {
-          "type": "string",
-          "defaultValue": "[subscription().tenantId]",
-          "metadata": {
-            "description": "Tenant Id of the subscription. Get using Get-AzureRmSubscription cmdlet or Get Subscription API"
-          }
-        },
+        },       
         "ADUserObjectID": {
           "type": "string",
           "metadata": {
             "description": "Object Id of the AD user. Get using Get-AzADUser or Get-AzADServicePrincipal cmdlets"
           }
-        },
-        "vaultSkuName": {
-          "type": "string",
-          "defaultValue": "Standard",
-          "allowedValues": [
-            "Standard",
-            "Premium"
-          ],
-          "metadata": {
-            "description": "SKU for the vault"
-          }
-        },
+        },       
         "cnStringSecretName":{
           "type": "string",
           "defaultValue": "dbcnstr",
@@ -263,6 +245,7 @@
       "azfirewallNestedTemplateUri" : "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/firewall.json', parameters('_artifactsLocationSasToken')))]",
       "vnetPeeringNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/vnetpeering.json', parameters('_artifactsLocationSasToken')))]",
       "sqlfirewallNestedTemplateUri" : "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/sqlfirewall.json', parameters('_artifactsLocationSasToken')))]",
+      "akvNestedTemplateUri" : "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/keyvault.json', parameters('_artifactsLocationSasToken')))]",
       "delegatedSubnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('spokevnetName'), parameters('appServiceOutboundSubnetName'))]",
       "wafSubnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('hubvnetName'), parameters('wafSubnetName'))]",                              
       "sqlSubnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('spokevnetName'), parameters('sqlSubnetName'))]",
@@ -761,55 +744,38 @@
             }
     },
     {
-      "comments": "Key Vault",
-      "type": "Microsoft.KeyVault/vaults",
-      "name": "[parameters('keyVaultName')]",
-      "apiVersion": "2019-09-01",
-      "location": "[resourceGroup().location]",
-      "dependsOn": [          
-        "[resourceId('Microsoft.Network/virtualNetworks/', parameters('spokevnetName'))]",
-        "[resourceId('Microsoft.Web/sites', parameters('webAppName'))]"
-      ],
-      "properties": {
-        "enabledForDeployment": false,
-        "enabledForDiskEncryption": false,
-        "enabledForTemplateDeployment": false,
-        "tenantId": "[parameters('tenantId')]",
-        "accessPolicies": [
-          {
-            "tenantId": "[parameters('tenantId')]",
-            "objectId": "[parameters('ADUserObjectID')]",
-            "permissions": {
-              "keys": ["all"],
-              "secrets": ["all"]
-            }
-          },
-          {
-            "tenantId": "[parameters('tenantId')]",            
-            "objectId": "[reference(resourceId('Microsoft.Web/sites', parameters('webAppName')), '2016-03-01','Full').identity.principalId]",            
-            "permissions": {
-                   "secrets": [ "get" ]
+            "comments": "keyvault.json nested ARM template for AKV",
+            "name": "linkedTemplate-keyvault",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-06-01",
+            "dependsOn": [                
+                "[resourceId('Microsoft.Network/virtualNetworks/', parameters('spokevnetName'))]",
+                "[resourceId('Microsoft.Web/sites', parameters('webAppName'))]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "contentVersion": "1.0.0.0",
+                    "uri": "[variables('akvNestedTemplateUri')]"
+                },
+                "parameters": {                   
+                    "keyVaultName":{
+                        "value": "[parameters('keyvaultname')]"
+                    },                    
+                    "ADUserObjectID":{
+                        "value": "[parameters('ADUserObjectID')]"
+                    },
+                    "webAppName":{
+                        "value": "[parameters('webAppName')]"
+                    },
+                    "secretname":{
+                        "value": "[variables('sqldbConnectionStringName')]"
+                    },
+                    "secretvalue":{
+                        "value": "[variables('secretsqlcnstr')]"
+                    }
                 }
-          }
-        ],
-        "sku": {
-          "name": "[parameters('vaultSkuName')]",
-          "family": "A"
-        }       
-      },
-      "resources" :[
-        {
-          "type": "secrets",
-          "name": "[variables('sqldbConnectionStringName')]",
-          "apiVersion": "2019-09-01",
-          "dependsOn": [
-                        "[resourceId('Microsoft.KeyVault/vaults/', parameters('keyVaultName'))]"                        
-                    ],
-          "properties":{
-            "value" : "[variables('secretsqlcnstr')]"
-          }
-        }
-      ]
-    }  
+            }
+    }
   ]
 }
