@@ -1,3 +1,3 @@
 # SecureApp
  Secure Application
-<img src="https://storagegomez.blob.core.windows.net/public/images/SecureAppPOC.png"/>
+<img src="https://storagegomez.blob.core.windows.net/public/images/SecureAppPOC2.png"/>
