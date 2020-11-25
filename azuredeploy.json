@@ -781,35 +781,6 @@
                     }
                 }
             }
-    },
-     {
-            "comments": "routetable.json nested ARM template for UDR",
-            "name": "linkedTemplate-udr",
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2020-06-01",
-            "dependsOn": [                
-                "[resourceId('Microsoft.Network/virtualNetworks/', parameters('spokevnetName'))]",
-                "linkedTemplate-azfirewall",
-                "linkedTemplate-sql-private-link"
-            ],           
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "contentVersion": "1.0.0.0",
-                    "uri": "[variables('udrNestedTemplateUri')]"
-                },
-                "parameters": {                   
-                    "routetablename":{
-                        "value": "[concat(parameters('resourceNamePrefix'),'-sql-udr')]"
-                    },                    
-                    "addressprefix":{
-                        "value": "[concat(reference(resourceId('Microsoft.Network/networkInterfaces',reference(resourceId('Microsoft.Resources/deployments', 'linkedTemplate-azfirewall')).outputs.privateLinkNicResource.value)).ipConfigurations[0].PrivateIpAddress,'/32')]"                        
-                    },
-                    "nexthopip":{
-                        "value": "[reference(resourceId('Microsoft.Network/azureFirewalls/azureFirewallIpConfigurations', concat(parameters('resourceNamePrefix'),'-firewall'), reference(resourceId('Microsoft.Resources/deployments', 'linkedTemplate-azfirewall')).outputs.ipConfigurationId.value)).PrivateIpAddress]"
-                    }
-                }
-            }
-    }
+    }    
   ]
 }
