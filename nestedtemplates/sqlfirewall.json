@@ -20,9 +20,9 @@
             "allowprivateendpoint" : "[concat(parameters('sqlservername'),'/','AllowPrivateEndpoint')]"
     },
     "resources": [
-        {
-            "name": "[variables('allowprivateendpoint')]",
+        {           
             "type": "Microsoft.Sql/servers/virtualNetworkRules",
+             "name": "[variables('allowprivateendpoint')]",
             "apiVersion": "2015-05-01-preview",
             "properties": {
                 "virtualNetworkSubnetId": "[parameters('privateEndpointSubnetId')]",
@@ -34,7 +34,7 @@
             "type": "Microsoft.Sql/servers/firewallRules",
             "name": "[variables('notallowazservices')]",
             "dependsOn": [
-                 "[variables('allowprivateendpoint')]"
+                 "[resourceId('Microsoft.Sql/servers/virtualNetworkRules',parameters('sqlservername'), 'AllowPrivateEndpoint')]"
             ],
             "location": "[resourceGroup().location]",
             "apiVersion": "2015-05-01-preview",            
