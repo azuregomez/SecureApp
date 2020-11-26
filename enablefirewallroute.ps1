@@ -23,6 +23,6 @@ $rtable = New-AzRouteTable -Name "allowapp2sql" -ResourceGroupName $rgname -Loca
 # assign route table to subnet
 $vnet = get-azvirtualnetwork -resourcegroupname $rgname -name $routevnet
 $sqlsubnet = $vnet.subnets | where-object {$_.Name -like "*sql*"}
-set-azvirtualnetworkconfig -name $sqlsubnet.name -virtualnetwork $vnet -addressprefix $sqlsubnet.addressprefix -routetable $rtable
+set-azvirtualnetworksubnetconfig -name $sqlsubnet.name -virtualnetwork $vnet -addressprefix $sqlsubnet.addressprefix -routetable $rtable
 $vnet | set-azvirtualnetwork
 write-host "UDR Enabled"
