@@ -238,6 +238,7 @@
         }
     },
     "variables":{
+      "hubspokeNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/hubspoke.json', parameters('_artifactsLocationSasToken')))]",
       "privateLinkNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/privatelink.json', parameters('_artifactsLocationSasToken')))]",
       "dnsvnetlinkNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/dnsvnetlink.json', parameters('_artifactsLocationSasToken')))]",
       "appgatewayNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/appgateway.json', parameters('_artifactsLocationSasToken')))]",
@@ -255,110 +256,74 @@
       "sqldbConnectionStringName": "dbcnstr",      
       "secretsqlcnstr": "[concat('Server=tcp:',parameters('sqlServerName'),'.database.windows.net,1433;Initial Catalog=',parameters('sqldatabasename'), ';User ID=', parameters('sqlAdministratorLogin'), ';Password=', parameters('sqlAdministratorPassword'),';')]"      
     },
-    "resources": [        
-    {
-        "comments": "Hub VNet",
-        "apiVersion": "2018-04-01",
-        "type": "Microsoft.Network/virtualNetworks",
-        "name": "[parameters('hubVnetName')]",
-        "location": "[resourcegroup().location]",        
-        "properties": {
-            "addressSpace": {
-            "addressPrefixes": [
-              "[parameters('hubVnetAddressPrefix')]"
-            ]
-          },
-        "subnets": [           
-            {
-              "name": "[parameters('wafSubnetName')]",
-              "properties": {
-                "addressPrefix": "[parameters('wafSubnetPrefix')]"               
-              }              
-            },
-            {
-              "name": "AzureFirewallSubnet",
-              "properties": {
-                "addressPrefix": "[parameters('firewallSubnetPrefix')]"                
-              }              
-            },            
-            {
-              "name": "[parameters('bastionSubnetName')]",
-              "properties": {
-                "addressPrefix": "[parameters('bastionSubnetPrefix')]"                
-              }              
+    "resources": [       
+      {
+            "comments": "vnets.json nested ARM template for hub and spoke",
+            "name": "linkedTemplate-hubspoke",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-06-01",            
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "contentVersion": "1.0.0.0",
+                    "uri": "[variables('hubspokeNestedTemplateUri')]"
+                },
+                "parameters": {                   
+                    "hubvnetName":{
+                        "value": "[parameters('hubVnetName')]"
+                    },
+                    "hubVnetAddressPrefix":{
+                        "value": "[parameters('hubVnetAddressPrefix')]"
+                    },
+                    "wafSubnetName":{
+                        "value": "[parameters('wafSubnetName')]"
+                    },
+                    "wafSubnetPrefix":{
+                        "value": "[parameters('wafSubnetPrefix')]"
+                    },
+                    "firewallSubnetPrefix":{
+                        "value": "[parameters('firewallSubnetPrefix')]"
+                    },
+                    "bastionSubnetName":{
+                        "value": "[parameters('bastionSubnetName')]"
+                    },
+                    "bastionSubnetPrefix":{
+                        "value": "[parameters('bastionSubnetPrefix')]"
+                    },
+                    "SpokeVnetName":{
+                        "value": "[parameters('SpokeVnetName')]"
+                    },
+                    "SpokeVnetAddressPrefix":{
+                        "value": "[parameters('SpokeVnetAddressPrefix')]"
+                    },
+                    "appServiceInboundSubnetName":{
+                        "value": "[parameters('appServiceInboundSubnetName')]"
+                    },
+                    "appServiceInboundSubnetPrefix":{
+                        "value": "[parameters('appServiceInboundSubnetPrefix')]"
+                    },
+                    "appServiceOutboundSubnetName":{
+                        "value": "[parameters('appServiceOutboundSubnetName')]"
+                    },
+                    "appServiceOutboundSubnetPrefix":{
+                        "value": "[parameters('appServiceOutboundSubnetPrefix')]"
+                    },
+                    "sqlSubnetName":{
+                        "value": "[parameters('sqlSubnetName')]"
+                    },
+                    "sqlSubnetPrefix":{
+                        "value": "[parameters('sqlSubnetPrefix')]"
+                    }
+                }
             }
-        ]    
-      }        
-    },      
-    {
-        "comments": "Spoke VNet",
-        "apiVersion": "2018-04-01",
-        "type": "Microsoft.Network/virtualNetworks",
-        "name": "[parameters('SpokeVnetName')]",
-        "location": "[resourcegroup().location]",        
-        "properties": {
-            "addressSpace": {
-            "addressPrefixes": [
-              "[parameters('SpokeVnetAddressPrefix')]"
-            ]
-          },
-        "subnets": [
-            {
-              "name": "[parameters('appServiceInboundSubnetName')]",
-              "properties": {
-                "addressPrefix": "[parameters('appServiceInboundSubnetPrefix')]",
-                "privateEndpointNetworkPolicies": "Disabled"
-              }              
-            }, 
-            {
-              "name": "[parameters('appServiceOutboundSubnetName')]",
-              "properties": {
-                "addressPrefix": "[parameters('appServiceOutboundSubnetPrefix')]",         
-                "serviceEndpoints": [
-                  {                      
-                      "service": "Microsoft.Sql",
-                      "locations": [
-                        "[resourcegroup().location]"
-                      ]
-                  },
-                  {                      
-                    "service": "Microsoft.Storage",
-                    "locations": [
-                      "[resourcegroup().location]"
-                    ]
-                  }                  
-                ],               
-              "delegations": [
-                  {
-                      "name": "delegation",                      
-                      "properties": {
-                          "serviceName": "Microsoft.Web/serverfarms",
-                          "actions": [
-                              "Microsoft.Network/virtualNetworks/subnets/action"
-                          ]
-                      }
-                  }
-              ]
-              }
-            },            
-            {
-              "name": "[parameters('sqlSubnetName')]",
-              "properties": {
-                "addressPrefix": "[parameters('sqlSubnetPrefix')]",
-                "privateEndpointNetworkPolicies": "Disabled"                
-              }              
-            }
-        ]    
-      }        
-    },
+    },    
     {
             "comments": "vnetpeering.json nested ARM template for VNet peering",
             "name": "linkedTemplate-vnetpeering",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2020-06-01",
             "dependsOn": [                
-                "[resourceId('Microsoft.Network/virtualNetworks/', parameters('hubvnetName'))]",                
-                "[resourceId('Microsoft.Network/virtualNetworks/', parameters('spokevnetName'))]"
+                "linkedTemplate-hubspoke"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -413,7 +378,7 @@
             "apiVersion": "2020-06-01",
             "dependsOn": [                
                   "linkedTemplate-webapp",
-                  "[concat('Microsoft.Network/virtualNetworks/', parameters('spokevnetName'))]",
+                  "linkedTemplate-hubspoke",
                   "linkedTemplate-msdeploy"
             ],
             "properties": {
@@ -494,8 +459,8 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2020-06-01",
             "dependsOn": [
-                "[resourceId('Microsoft.Web/sites', parameters('webAppName'))]",
-                "[resourceId('Microsoft.Network/virtualNetworks', parameters('spokevnetname'))]"                
+                "linkedTemplate-hubspoke",
+                "linkedTemplate-webapp"                
             ],
             "properties": {
                 "mode": "Incremental",
@@ -537,7 +502,7 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2020-06-01",
             "dependsOn": [                
-                "[resourceId('Microsoft.Network/virtualNetworks', parameters('spokevnetname'))]"                
+                "linkedTemplate-hubspoke"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -571,7 +536,7 @@
             "apiVersion": "2020-06-01",
             "dependsOn": [
                 "linkedTemplate-sql-db",                
-                "[resourceId('Microsoft.Network/virtualNetworks', parameters('spokevnetname'))]"                
+                "linkedTemplate-hubspoke"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -718,8 +683,8 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2020-06-01",
             "dependsOn": [                
-                "[resourceId('Microsoft.Network/virtualNetworks/', parameters('hubvnetName'))]",
-                "[resourceId('Microsoft.Network/virtualNetworks/', parameters('spokevnetName'))]",
+                "linkedTemplate-hubspoke",
+                "linkedTemplate-webapp",
                 "linkedTemplate-web-hub-vnet-link"
             ],
             "properties": {
@@ -750,7 +715,7 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2020-06-01",
             "dependsOn": [                
-                "[resourceId('Microsoft.Network/virtualNetworks/', parameters('hubvnetName'))]"                
+                "linkedTemplate-hubspoke"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -777,8 +742,8 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2020-06-01",
             "dependsOn": [                
-                "[resourceId('Microsoft.Network/virtualNetworks/', parameters('spokevnetName'))]",
-                "[resourceId('Microsoft.Web/sites', parameters('webAppName'))]"
+                "linkedTemplate-webapp",
+                "linkedTemplate-hubspoke"
             ],
             "properties": {
                 "mode": "Incremental",

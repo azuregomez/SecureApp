@@ -1,0 +1,134 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+         "hubVnetName": {
+            "type": "string"
+         },
+         "hubVnetAddressPrefix": {
+             "type": "string"
+         },
+         "wafSubnetName": {
+             "type": "string"
+         },
+         "wafSubnetPrefix": {
+             "type": "string"
+         },
+         "firewallSubnetPrefix": {
+             "type": "string"
+         },
+         "bastionSubnetName": {
+             "type": "string"
+         },
+         "bastionSubnetPrefix": {
+             "type": "string"
+         },
+         "SpokeVnetName": {
+             "type": "string"
+         },
+         "SpokeVnetAddressPrefix": {
+             "type": "string"
+         },
+         "appServiceInboundSubnetName": {
+             "type": "string"
+         },
+         "appServiceInboundSubnetPrefix": {
+             "type": "string"
+         },
+         "appServiceOutboundSubnetName": {
+             "type": "string"
+         },
+         "appServiceOutboundSubnetPrefix": {
+             "type": "string"
+         },
+         "sqlSubnetName": {
+             "type": "string"
+         },
+         "sqlSubnetPrefix": {
+             "type": "string"
+         }
+    },  
+    "resources" : [
+         {
+        "comments": "Hub VNet",
+        "apiVersion": "2018-04-01",
+        "type": "Microsoft.Network/virtualNetworks",
+        "name": "[parameters('hubVnetName')]",
+        "location": "[resourcegroup().location]",        
+        "properties": {
+            "addressSpace": {
+            "addressPrefixes": [
+              "[parameters('hubVnetAddressPrefix')]"
+            ]
+          },
+        "subnets": [           
+            {
+              "name": "[parameters('wafSubnetName')]",
+              "properties": {
+                "addressPrefix": "[parameters('wafSubnetPrefix')]"               
+              }              
+            },
+            {
+              "name": "AzureFirewallSubnet",
+              "properties": {
+                "addressPrefix": "[parameters('firewallSubnetPrefix')]"                
+              }              
+            },            
+            {
+              "name": "[parameters('bastionSubnetName')]",
+              "properties": {
+                "addressPrefix": "[parameters('bastionSubnetPrefix')]"                
+              }              
+            }
+        ]    
+      }        
+    },      
+    {
+        "comments": "Spoke VNet",
+        "apiVersion": "2018-04-01",
+        "type": "Microsoft.Network/virtualNetworks",
+        "name": "[parameters('SpokeVnetName')]",
+        "location": "[resourcegroup().location]",        
+        "properties": {
+            "addressSpace": {
+            "addressPrefixes": [
+              "[parameters('SpokeVnetAddressPrefix')]"
+            ]
+          },
+        "subnets": [
+            {
+              "name": "[parameters('appServiceInboundSubnetName')]",
+              "properties": {
+                "addressPrefix": "[parameters('appServiceInboundSubnetPrefix')]",
+                "privateEndpointNetworkPolicies": "Disabled"
+              }              
+            }, 
+            {
+              "name": "[parameters('appServiceOutboundSubnetName')]",
+              "properties": {
+                "addressPrefix": "[parameters('appServiceOutboundSubnetPrefix')]",                                      
+                "delegations": [
+                  {
+                      "name": "delegation",                      
+                      "properties": {
+                          "serviceName": "Microsoft.Web/serverfarms",
+                          "actions": [
+                              "Microsoft.Network/virtualNetworks/subnets/action"
+                          ]
+                      }
+                  }
+              ]
+              }
+            },            
+            {
+              "name": "[parameters('sqlSubnetName')]",
+              "properties": {
+                "addressPrefix": "[parameters('sqlSubnetPrefix')]",
+                "privateEndpointNetworkPolicies": "Disabled"                
+              }              
+            }
+        ]    
+      }        
+    }
+    ]
+}
