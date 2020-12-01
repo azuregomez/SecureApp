@@ -1,0 +1,26 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+         "webAppName": {
+            "type": "string"
+            },
+        "packageUri": {
+            "type": "string",
+            "metadata": {
+                "description": "zipped package uri"
+            }
+        }
+    },
+    "resources" : [
+        {
+            "name": "[concat(parameters('webAppName'),'/MSDeploy')]",
+            "type": "Microsoft.Web/sites/extensions",
+            "location" : "[resourceGroup().location]",  
+            "apiVersion": "2018-02-01",
+            "properties": {
+                "packageUri": "[parameters('packageUri')]"
+            }
+        }
+    ]
+}

@@ -1,0 +1,52 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+         "webAppName": {
+            "type": "string"
+            },
+        "cnStrName": {
+            "type": "string",
+            "metadata": {
+                "description": "connection string name"
+            }
+        },
+        "cnStrValue": {
+            "type": "string",
+            "metadata": {
+                "description": "connection string value"
+            }
+        },
+        "cnStrType": {
+            "type": "string",
+            "defaultValue": "SQLAzure",
+             "allowedValues": [
+                "MySql",
+                "SQLServer",
+                "SQLAzure",
+                "Custom",
+                "NotificationHub",
+                "ServiceBus",
+                "EventHub",
+                "ApiHub",
+                "DocDb",
+                "RedisCache",
+                "PostgreSQL"
+            ]
+        }
+    },
+    "resources" : [
+        {
+            "name": "[concat(parameters('webAppName'),'/connectionstrings')]",
+            "type": "Microsoft.Web/sites/config",
+            "location" : "[resourceGroup().location]",  
+            "apiVersion": "2018-02-01",
+            "properties": {
+                "[parameters('cnStrName')]": {
+                            "value": "[parameters('cnStrValue')]",
+                            "type": "[parameters('cnStrType')]"
+                }                    
+            }
+        }
+    ]
+}
