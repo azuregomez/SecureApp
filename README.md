@@ -14,18 +14,16 @@ Green field or .net application migration with a SQL Server back end the followi
 * Outbound traffic from the Web App to SQL Database and other in-network resources (including on-premise) routed to a firewall for inspection.
 ## Architecture
 <img src="https://storagegomez.blob.core.windows.net/public/images/SecureApp_POC.png"/>
- ## Solution Overview
- <img src="https://storagegomez.blob.core.windows.net/public/images/SecureAppSteps.png"/>
- This solution deploys a fully automated secure baseline Azure ARM Template + Powershell to provision a PaaS environment fully configured for high security.  
- Azure Resources deployed:
- * Hub and Spoke VNets with VNet peering.
- * App Gateway with WAF and Azure Firewall in the Hub VNet.
- * Azure Key Vault with SQL CnString as Secret.
- * Premium App Service Plan with Regional VNet Integration.
- * App Service with Manage Identity and Private Link.
- * SQL Database with Private Link.
- * Private DNS Zones for Private Endpoints.
- * Optional Route Table to send traffic from the application destined to SQL to the Azure Firewall.
- * Configurations to block internet traffic to App Service and SQL Database.
-
-
+## Solution Overview
+<img src="https://storagegomez.blob.core.windows.net/public/images/SecureAppSteps.png"/>
+This solution deploys a fully automated secure baseline Azure ARM Template + Powershell to provision a PaaS environment fully configured for high security.  
+Azure Resources deployed:
+* Hub and Spoke VNets with VNet peering.
+* App Gateway with WAF and Azure Firewall in the Hub VNet.
+* Azure Key Vault with SQL CnString as Secret.
+* Premium App Service Plan with Regional VNet Integration.
+* App Service with Manage Identity and Private Link.
+* SQL Database with Private Link.
+* Private DNS Zones for Private Endpoints.
+* Optional Route Table to send traffic from the application destined to SQL to the Azure Firewall.
+* Configurations to block internet traffic to App Service and SQL Database.
