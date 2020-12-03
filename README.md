@@ -47,3 +47,13 @@ Get-AzADUser or Get-AzADServicePrincipal.
 ```
 3. Run azudereploy.json
 4. Run enablefirewallroute.json (only if you want to send traffic from the app with destination SQL DB to the Azure Firewall)
+## Release Notes
+* Pre requisites: Azure Subscription with Contributor role, Powershell 5.1, Azure Cmdlets
+* App Gateway is deployed with a Public IP. This means the App Service is accessible from the internet through App Gateway.
+* The template as well as the powershell script follow an easy convention where all resources have the same prefix. The prefix is specified in the template parameters and all other parameters have a default derived from resourceprefix. The powershell script assumes this convention is followed.
+* For the most restrictive security, Azure Key Vault could have a Private Endpoint and VNet restrictions enabled. And allow only requests from the Private Endpoint. However, Key Vault References do not work yet with Regional VNet Integration - the Key Vault would get the request from one of the default Outbound public IPs of App Service. The temporary solution is to use Managed Service Identity as the security mechanism.
+* This architecture virtually injects an App Service into a VNet by allowing inbound trafffic exclusively from App Gateway and using a delegated subnet for Outbound access to SQL Azure DB, Storage and potentially to on-prem locations. For true VNet injection you must use an App Service Environment.
+* Application Deployment is not restricted. The SCM side of app service does not have IP Restrictions in the template. 
+### What if I want the application to be ONLY available from my corporate Network?
+1. App Gateway needs to be deployed with an internal IP, not external.  If App Gateway is not desired and internal access is appropriate without a WAF, this can be accomplished through the private endpoint but if traffic comes from on-premise there has to be DNS forwarding or on-prem pinpoint DNS to resolve the private endpoint of the web application.
+2. For Hybrid connectivity: VPN or VNet Gateway (ExpressRoute).
