@@ -14,10 +14,12 @@ Green field or .net application migration with a SQL Server back end the followi
 * Outbound traffic from the Web App to SQL Database and other in-network resources (including on-premise) routed to a firewall for inspection.
 ## Architecture
 <img src="https://storagegomez.blob.core.windows.net/public/images/SecureApp_POC.png"/>
+
 ## Solution Overview
 <img src="https://storagegomez.blob.core.windows.net/public/images/SecureAppSteps.png"/>
+
 This solution deploys a fully automated secure baseline Azure ARM Template + Powershell to provision a PaaS environment fully configured for high security.  
-Azure Resources deployed:
+### Azure Resources deployed:
 * Hub and Spoke VNets with VNet peering.
 * App Gateway with WAF and Azure Firewall in the Hub VNet.
 * Azure Key Vault with SQL CnString as Secret.
