@@ -28,4 +28,15 @@ This solution deploys a fully automated secure baseline Azure ARM Template + Pow
 * SQL Database with Private Link.
 * Private DNS Zones for Private Endpoints.
 * Optional Route Table to send traffic from the application destined to SQL to the Azure Firewall.
+* A sample application (Athlete Roster) deployed as a package leveraging the MSDEPLOY extension.
+* A sample SQL DB schema with data that supports the sample application. Using a bacpac file.
 * Configurations to block internet traffic to App Service and SQL Database.
+### Deployment Steps
+1. Clone or dowload the solution to your local machine
+git clone https://github.com/azuregomez/SecureApp.git somefolder
+1. Configure azuredeploy.parameters.json
+Provide a resource group prefix.  This prefix will be used to create default names for Azure Resources.
+* Provide additional parameters that may override defaults. Like application package and SQL Database bacpac.
+* Provide optinal parameters for _artifactsLocation and _artifactsLocationSasToken.  By default, these paramataers point to linked templates in this github repository.  If you host the files in a different repositpry you will have to provide these parameters.
+* Provide you Azure AD Object ID.  This is required so you are authorized to manage the the Key Vault that is created.
+You can obtain this with Powershell cmdlets: Get-AzADUser or Get-AzADServicePrincipal.
