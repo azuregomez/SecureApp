@@ -53,8 +53,8 @@ Get-AzADUser or Get-AzADServicePrincipal.
 * The template as well as the powershell script follow an easy convention where all resources have the same prefix. The prefix is specified in the template parameters and all other parameters have a default derived from resourceprefix. The powershell script assumes this convention is followed.
 * For the most restrictive security, Azure Key Vault could have a Private Endpoint and VNet restrictions enabled. And allow only requests from the Private Endpoint. However, Key Vault References do not work yet with Regional VNet Integration - the Key Vault would get the request from one of the default Outbound public IPs of App Service. The temporary solution is to use Managed Service Identity as the security mechanism.
 * To secure and inspect the traffic to Private Endpoints there are 2 caveats:
-** NSGs at the Private Endpoint subnets are NOT supported.
-** Creating Private Link Endpoints injects /32 routes into your Azure subnets. Therefore you want to create User-Defined Routes for your endpoint using specific /32 prefixes too (otherwise, the most specific prefix will win).  This is exactly what enablefirewallroute.ps1 does.
+     * NSGs at the Private Endpoint subnets are NOT supported.
+     * Creating Private Link Endpoints injects /32 routes into your Azure subnets. Therefore you want to create User-Defined Routes for your endpoint using specific /32 prefixes too (otherwise, the most specific prefix will win).  This is exactly what enablefirewallroute.ps1 does.
 https://blog.cloudtrooper.net/2020/05/23/filtering-traffic-to-private-endpoints-with-azure-firewall/
 * This architecture virtually injects an App Service into a VNet by allowing inbound trafffic exclusively from App Gateway and using a delegated subnet for Outbound access to SQL Azure DB, Storage and potentially to on-prem locations. For true VNet injection you must use an App Service Environment.
 * Application Deployment is not restricted. The SCM side of app service does not have IP Restrictions in the template. 
