@@ -30,7 +30,7 @@
                     {
                     "id": "string",
                     "properties": {
-                        "addressPrefix": "[concat(reference(resourceId('Microsoft.Network/networkInterfaces',parameters('targetNicId'))).ipconfigurations[0].privateipaddress,'/32')]",
+                        "addressPrefix": "[concat(reference(parameters('targetNicId')).ipconfigurations[0].privateipaddress,'/32')]",
                         "nextHopType": "[parameters('nexthoptype')]",
                         "nextHopIpAddress":  "[reference(resourceId('Microsoft.Network/azureFirewalls',parameters('azfwName'))).ipconfigurations[0].privateipaddress]"
                     },
