@@ -750,10 +750,7 @@
                     "contentVersion": "1.0.0.0",
                     "uri": "[variables('azfirewallNestedTemplateUri')]"
                 },
-                "parameters": {                   
-                    "prefix":{
-                        "value": "[parameters('resourceNamePrefix')]"
-                    },
+                "parameters": {                                      
                     "firewallName":{
                         "value": "[parameters('azureFirewallName')]"
                     },
@@ -823,7 +820,7 @@
                         "value": "[concat(parameters('resourceNamePrefix'), '-routetable-sql')]"
                     },         
                     "targetNicId" : {
-                        "value": "web-hub-link"
+                        "value": "[reference(resourceId('Microsoft.Resources/deployments', 'linkedTemplate-sql-private-link')).outputs.privateLinkNicResource.value]"
                     },                             
                     "azfwName": {
                         "value": "[parameters('azureFirewallName')]"
