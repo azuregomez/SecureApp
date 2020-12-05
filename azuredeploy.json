@@ -251,6 +251,7 @@
       "webappNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/webapp.json', parameters('_artifactsLocationSasToken')))]",
       "cnStrNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/cnstr.json', parameters('_artifactsLocationSasToken')))]",
       "msdeployNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/msdeploy.json', parameters('_artifactsLocationSasToken')))]",      
+      "sqlnoPublicNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/sqlnopublic.json', parameters('_artifactsLocationSasToken')))]",
       "wafSubnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('hubvnetName'), parameters('wafSubnetName'))]",                              
       "sqlSubnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('spokevnetName'), parameters('sqlSubnetName'))]",
       "sqldbConnectionStringName": "dbcnstr",      
@@ -572,7 +573,7 @@
                 }
             }
     },
-     {
+    {
             "comments": "sqlfirewall.json nested ARM template for SQL endpoint",
             "name": "linkedTemplate-sql-firewall",
             "type": "Microsoft.Resources/deployments",
@@ -593,6 +594,27 @@
                     "privateEndpointSubnetId": {
                         "value": "[variables('sqlSubnetRef')]"
                     }                    
+                }
+            }
+    },
+     {
+            "comments": "sqlnopublic.json nested ARM template for SQL public access",
+            "name": "linkedTemplate-sql-nopublic",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-06-01",
+            "dependsOn": [
+                "linkedTemplate-sql-firewall"                
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "contentVersion": "1.0.0.0",
+                    "uri": "[variables('sqlnoPublicNestedTemplateUri')]"
+                },
+                "parameters": {
+                    "sqlserverName":{
+                        "value": "[parameters('sqlServerName')]"
+                    }                   
                 }
             }
     },

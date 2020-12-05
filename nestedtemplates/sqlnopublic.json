@@ -1,0 +1,21 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "sqlserverName": {
+            "type": "string"
+        }
+    },    
+    "resources": [
+        {
+        "name": "[parameters('sqlserverName')]",
+        "type": "Microsoft.Sql/servers",
+        "location": "[resourceGroup().location]",              
+        "apiVersion": "2019-06-01-preview",
+        "properties": {            
+            "version": "12.0",
+            "publicNetworkAccess" : "Disabled"
+            }      
+        }
+    ]
+}
