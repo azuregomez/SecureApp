@@ -1,17 +1,12 @@
 {
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
-    "parameters": {
-        "prefix": {
-            "type": "string"        
-        },  
+    "parameters": {          
         "vnet": {
-            "type": "string",
-            "defaultValue": "[concat(parameters('prefix'),'-hub-vnet')]"
+            "type": "string"            
         },          
         "firewallName": {
-            "type": "string",
-            "defaultValue": "[concat(parameters('prefix'),'-firewall')]",
+            "type": "string",            
             "metadata": {
             "description": "Azure Firewall name"
             }
@@ -47,7 +42,7 @@
       "azureFirewallSubnetName": "AzureFirewallSubnet",
       "azureFirewallSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets',parameters('vnet'), variables('azureFirewallSubnetName'))]",
       "azureFirewallSubnetJSON": "[json(format('{{\"id\": \"{0}\"}}', variables('azureFirewallSubnetId')))]",
-      "publicIPNamePrefix" : "[concat(parameters('prefix'), '-fw-')]",
+      "publicIPName" : "[concat(parameters('firewallName'), '-ip-')]",
       "ruleCollectionName" : "sqlPrivateEndpoint",
       "ruleName": "allowAppService",
       "copy": [
@@ -59,7 +54,7 @@
             "properties": {
               "subnet": "[if(equals(copyIndex('azureFirewallIpConfigurations'), 0), variables('azureFirewallSubnetJSON'), json('null'))]",
               "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(variables('publicIPNamePrefix'), add(copyIndex('azureFirewallIpConfigurations'), 1)))]"
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(variables('publicIPName'), add(copyIndex('azureFirewallIpConfigurations'), 1)))]"
               }
             }
           }
@@ -68,7 +63,7 @@
     },
     "resources": [     
       {
-        "name": "[concat(variables('publicIPNamePrefix'), add(copyIndex(), 1))]",
+        "name": "[concat(variables('publicIPName'), add(copyIndex(), 1))]",
         "type": "Microsoft.Network/publicIPAddresses",
         "apiVersion": "2020-05-01",
         "location": "[resourceGroup().location]", 

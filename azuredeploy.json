@@ -235,6 +235,10 @@
           "metadata": {
             "description": "DB cnstring secret name"
           }
+        },
+        "azureFirewallName": {
+            "type": "string",
+            "defaultValue" : "[concat(parameters('resourceNamePrefix'),'-firewall')]"
         }
     },
     "variables":{
@@ -252,6 +256,7 @@
       "cnStrNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/cnstr.json', parameters('_artifactsLocationSasToken')))]",
       "msdeployNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/msdeploy.json', parameters('_artifactsLocationSasToken')))]",      
       "sqlnoPublicNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/sqlnopublic.json', parameters('_artifactsLocationSasToken')))]",
+      "routetableNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/routetable.json', parameters('_artifactsLocationSasToken')))]",
       "wafSubnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('hubvnetName'), parameters('wafSubnetName'))]",                              
       "sqlSubnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('spokevnetName'), parameters('sqlSubnetName'))]",
       "sqldbConnectionStringName": "dbcnstr",      
@@ -749,6 +754,12 @@
                     "prefix":{
                         "value": "[parameters('resourceNamePrefix')]"
                     },
+                    "firewallName":{
+                        "value": "[parameters('azureFirewallName')]"
+                    },
+                    "vnet":{
+                        "value": "[parameters('hubVnetName')]"
+                    },
                     "allowSource":{
                         "value": "[parameters('appServiceOutboundSubnetPrefix')]"
                     },
@@ -788,6 +799,34 @@
                     },
                     "secretvalue":{
                         "value": "[variables('secretsqlcnstr')]"
+                    }
+                }
+            }
+    },
+    {
+            "comments": "routetable.json nested ARM template for routetable",
+            "name": "linkedTemplate-routetable",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-06-01",
+            "dependsOn": [
+                "linkedTemplate-sql-private-link",
+                "linkedTemplate-azfirewall"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "contentVersion": "1.0.0.0",
+                    "uri": "[variables('routetableNestedTemplateUri')]"
+                },
+                "parameters": {                   
+                    "routetablename" :{
+                        "value": "[concat(parameters('resourceNamePrefix'), '-routetable-sql')]"
+                    },         
+                    "targetNicId" : {
+                        "value": "web-hub-link"
+                    },                             
+                    "azfwName": {
+                        "value": "[parameters('azureFirewallName')]"
                     }
                 }
             }

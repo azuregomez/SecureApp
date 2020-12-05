@@ -8,17 +8,17 @@
                 "description": "UDR name"
             }
         },
-        "addressprefix": {
+        "targetNicId": {
             "type": "string"           
+        },       
+        "azfwName": {
+            "type": "string"
         },
-        "nexthoptype": {
+         "nexthoptype": {
             "type": "string",
             "defaultValue" : "VirtualAppliance"
-        },
-        "nexthopip": {
-            "type": "string"
         }
-    },
+    },    
     "resources": [
         {
             "name": "[parameters('routetablename')]",
@@ -30,9 +30,9 @@
                     {
                     "id": "string",
                     "properties": {
-                        "addressPrefix": "[parameters('addressprefix')]",
+                        "addressPrefix": "[concat(reference(resourceId('Microsoft.Network/networkInterfaces',parameters('targetNicId'))).ipconfigurations[0].privateipaddress,'/32')]",
                         "nextHopType": "[parameters('nexthoptype')]",
-                        "nextHopIpAddress":  "[parameters('nexthopip')]"
+                        "nextHopIpAddress":  "[reference(resourceId('Microsoft.Network/azureFirewalls',parameters('azfwName'))).ipconfigurations[0].privateipaddress]"
                     },
                     "name": "string"
                     }
