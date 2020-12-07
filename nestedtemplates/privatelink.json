@@ -111,7 +111,11 @@
         "privateLinkNicResource": {
             "type": "string",
             "value": "[reference(resourceId('Microsoft.Network/privateEndpoints', variables('privateEndpointName')), '2019-11-01').networkInterfaces[0].id]"
-        },       
+        },    
+        "privateLinkNicName": {
+            "type": "string",
+            "value": "[reference(resourceId('Microsoft.Network/privateEndpoints', variables('privateEndpointName')), '2019-11-01').networkInterfaces[0].name]"
+        }, 
         "privateEndpointName": {
             "type": "string",
             "value": "[variables('privateEndpointName')]"

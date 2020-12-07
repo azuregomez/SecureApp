@@ -820,7 +820,7 @@
                         "value": "[concat(parameters('resourceNamePrefix'), '-routetable-sql')]"
                     },         
                     "targetNicId" : {
-                        "value": "[reference(resourceId('Microsoft.Resources/deployments', 'linkedTemplate-sql-private-link')).outputs.privateLinkNicResource.value]"
+                        "value": "[reference(resourceId('Microsoft.Resources/deployments', 'linkedTemplate-sql-private-link')).outputs.privateLinkNicName.value]"
                     },                             
                     "azfwName": {
                         "value": "[parameters('azureFirewallName')]"

@@ -13,7 +13,3 @@ if ($null -eq $rg)
 }
 New-AzResourceGroupDeployment -ResourceGroupName $rgname -TemplateFile $templateFile -TemplateParameterFile $templateparamfile 
 write-host "ARM Deployment Complete"
-#deny public network access to sql
-$servername = $prefix + "-sqlserver"
-set-azsqlserver -resourcegroupname $rgname -servername $servername -publicnetworkaccess "Disabled"
-write-host "SQL Public Access Disabled"
