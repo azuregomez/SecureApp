@@ -799,34 +799,6 @@
                     }
                 }
             }
-    },
-    {
-            "comments": "routetable.json nested ARM template for routetable",
-            "name": "linkedTemplate-routetable",
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2020-06-01",
-            "dependsOn": [
-                "linkedTemplate-sql-private-link",
-                "linkedTemplate-azfirewall"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "contentVersion": "1.0.0.0",
-                    "uri": "[variables('routetableNestedTemplateUri')]"
-                },
-                "parameters": {                   
-                    "routetablename" :{
-                        "value": "[concat(parameters('resourceNamePrefix'), '-routetable-sql')]"
-                    },         
-                    "targetNicId" : {
-                        "value": "[reference(resourceId('Microsoft.Resources/deployments', 'linkedTemplate-sql-private-link')).outputs.privateLinkNicResource.value]"
-                    },                             
-                    "azfwName": {
-                        "value": "[parameters('azureFirewallName')]"
-                    }
-                }
-            }
     }    
   ]
 }

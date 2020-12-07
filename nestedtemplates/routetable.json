@@ -1,6 +1,6 @@
 {
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-    "contentVersion": "1.0.0.0",
+    "contentVersion": "1.0.0.0",    
     "parameters": {
         "routetablename": {
             "type": "string",
@@ -23,7 +23,7 @@
         "nicName": "[split(parameters('targetNicId'),'/')[8]]"
     }, 
     "resources": [
-        {
+        {            
             "name": "[parameters('routetablename')]",
             "type": "Microsoft.Network/routeTables",
             "apiVersion": "2020-06-01",
@@ -37,7 +37,7 @@
                         "nextHopType": "[parameters('nexthoptype')]",
                         "nextHopIpAddress":  "[reference(resourceId('Microsoft.Network/azureFirewalls',parameters('azfwName'))).ipconfigurations[0].privateipaddress]"
                     },
-                    "name": "string"
+                    "name": "sqlroute"
                     }
                 ] 
             }          
