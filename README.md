@@ -14,9 +14,21 @@ Green field or .net application migration with a SQL Server back end the followi
 * Outbound traffic from the Web App to SQL Database and other in-network resources (including on-premise) routed to a firewall for inspection.
 ## Architecture
 <img src="https://storagegomez.blob.core.windows.net/public/images/SecureApp_POC.png"/>
+This architecture leverages the following Azure Security features:
+Feature | Purpose | Reference
+------- | ------- | -----
+Key Vault | Store secrets like SQL connection string securely. | https://docs.microsoft.com/en-us/azure/key-vault/general/basic-concepts
+Managed Identity |  App Service identity to securely access Key Vault secrets. | https://docs.microsoft.com/en-us/azure/app-service/overview-managed-identity
+Private Endpoint for Web App | Eliminate exposure from the public internet. | https://docs.microsoft.com/en-us/azure/app-service/networking/private-endpoint
+VNet Integration |  Enables apps to access resources in or through a VNet |  https://docs.microsoft.com/en-us/azure/app-service/web-sites-integrate-with-vnet
+Private Endpoint for SQL DB |  Connect to SQL DB through a private IP | https://docs.microsoft.com/en-us/azure/azure-sql/database/private-endpoint-overview
+SQL DB Firewall rules | Eliminate exposure from the public internet | https://docs.microsoft.com/en-us/azure/azure-sql/database/firewall-configure
+Route Table | Direct application traffic destined to the SQl DB to Azure Firewall | https://docs.microsoft.com/en-us/azure/virtual-network/manage-route-table
+App Gateway | Web Application Firewall  |   https://docs.microsoft.com/en-us/azure/architecture/example-scenario/gateway/firewall-application-gateway
+Azure Firewall | App outbound traffic control and inspection | https://docs.microsoft.com/en-us/azure/firewall/overview
 
 ## Solution Overview
-<img src="https://storagegomez.blob.core.windows.net/public/images/SecureAppSteps.png"/>
+<img src="https://storagegomez.blob.core.windows.net/public/images/SecureAppSteps2.png"/>
 
 This solution deploys a fully automated secure baseline Azure ARM Template + Powershell to provision a PaaS environment fully configured for high security.  
 ### Azure Resources deployed:
