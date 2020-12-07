@@ -15,6 +15,7 @@ Green field or .net application migration with a SQL Server back end the followi
 ## Architecture
 <img src="https://storagegomez.blob.core.windows.net/public/images/SecureApp_POC.png"/>
 This architecture leverages the following Azure Security features:
+
 Feature | Purpose | Reference
 ------- | ------- | -----
 Key Vault | Store secrets like SQL connection string securely. | https://docs.microsoft.com/en-us/azure/key-vault/general/basic-concepts
