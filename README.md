@@ -1,7 +1,7 @@
 # Secure PaaS Application
 ## Why migrate your application to App Service and Azure SQL DB?
 * Get out of the business of managing infrastructure. Just manage code and ship new features faster.
-* Get built-in Cloud Native features: Monitoring, Autoscaling, Hight Availability, Disaster Recovery.
+* Get built-in Cloud Native features: Monitoring, Autoscaling, High Availability, Disaster Recovery.
 * App Service is the only managed app hosting platform for .net. With 2 decades of investment and 25+ years of SQL innovation.
 * Proven success: hosting 2M apps and 41B daily requests with 99.95% SLA.
 * Free App Service and Database Migration Assistants
