@@ -46,6 +46,12 @@
          },
          "sqlSubnetPrefix": {
              "type": "string"
+         },
+         "keyvaultSubnetName": {
+             "type": "string"
+         },
+         "keyvaultSubnetPrefix": {
+             "type": "string"
          }
     },  
     "resources" : [
@@ -124,6 +130,13 @@
               "name": "[parameters('sqlSubnetName')]",
               "properties": {
                 "addressPrefix": "[parameters('sqlSubnetPrefix')]",
+                "privateEndpointNetworkPolicies": "Disabled"                
+              }              
+            },                        
+            {
+              "name": "[parameters('keyvaultSubnetName')]",
+              "properties": {
+                "addressPrefix": "[parameters('keyvaultSubnetPrefix')]",
                 "privateEndpointNetworkPolicies": "Disabled"                
               }              
             }

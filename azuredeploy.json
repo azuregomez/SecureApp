@@ -110,7 +110,21 @@
             "type": "string",
             "defaultValue": "10.20.10.0/24",
             "metadata": {
-              "description": "Firewall subnet Address prefix"
+              "description": "SQL subnet Address prefix"
+            }
+        },        
+        "keyvaultSubnetName": {
+          "type": "string",
+          "defaultValue": "keyvault-subnet",
+          "metadata": {
+              "description": "Subnet name that will contain Keyvault Private Endpoint"
+          }
+        },
+        "keyvaultSubnetPrefix": {
+            "type": "string",
+            "defaultValue": "10.20.20.0/24",
+            "metadata": {
+              "description": "Keyvault subnet Address prefix"
             }
         },
         "bastionSubnetName": {
@@ -255,8 +269,7 @@
       "webappNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/webapp.json', parameters('_artifactsLocationSasToken')))]",
       "cnStrNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/cnstr.json', parameters('_artifactsLocationSasToken')))]",
       "msdeployNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/msdeploy.json', parameters('_artifactsLocationSasToken')))]",      
-      "sqlnoPublicNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/sqlnopublic.json', parameters('_artifactsLocationSasToken')))]",
-      "routetableNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/routetable.json', parameters('_artifactsLocationSasToken')))]",
+      "sqlnoPublicNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/sqlnopublic.json', parameters('_artifactsLocationSasToken')))]",      
       "wafSubnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('hubvnetName'), parameters('wafSubnetName'))]",                              
       "sqlSubnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('spokevnetName'), parameters('sqlSubnetName'))]",
       "sqldbConnectionStringName": "dbcnstr",      
@@ -319,6 +332,12 @@
                     },
                     "sqlSubnetPrefix":{
                         "value": "[parameters('sqlSubnetPrefix')]"
+                    },
+                    "keyvaultSubnetName":{
+                        "value": "[parameters('keyvaultSubnetName')]"
+                    },
+                    "keyvaultSubnetPrefix":{
+                        "value": "[parameters('keyvaultSubnetPrefix')]"
                     }
                 }
             }
@@ -579,7 +598,7 @@
             }
     },
     {
-            "comments": "sqlfirewall.json nested ARM template for SQL endpoint",
+            "comments": "sqlfirewall.json nested ARM template for SQL firewall",
             "name": "linkedTemplate-sql-firewall",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2020-06-01",
@@ -620,6 +639,83 @@
                     "sqlserverName":{
                         "value": "[parameters('sqlServerName')]"
                     }                   
+                }
+            }
+    },    
+    {
+            "comments": "keyvault.json nested ARM template for AKV",
+            "name": "linkedTemplate-keyvault",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-06-01",
+            "dependsOn": [                
+                "linkedTemplate-webapp",
+                "linkedTemplate-hubspoke"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "contentVersion": "1.0.0.0",
+                    "uri": "[variables('akvNestedTemplateUri')]"
+                },
+                "parameters": {                   
+                    "keyVaultName":{
+                        "value": "[parameters('keyvaultname')]"
+                    },                    
+                    "ADUserObjectID":{
+                        "value": "[parameters('ADUserObjectID')]"
+                    },
+                    "webAppName":{
+                        "value": "[parameters('webAppName')]"
+                    },
+                    "secretname":{
+                        "value": "[variables('sqldbConnectionStringName')]"
+                    },
+                    "secretvalue":{
+                        "value": "[variables('secretsqlcnstr')]"
+                    }
+                }
+            }
+    },
+    {
+            "comments": "privatelink.json nested ARM template for Keyvault",
+            "name": "linkedTemplate-keyvault-private-link",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-06-01",
+            "dependsOn": [
+                "linkedTemplate-keyvault",                
+                "linkedTemplate-hubspoke"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "contentVersion": "1.0.0.0",
+                    "uri": "[variables('privateLinkNestedTemplateUri')]"
+                },
+                "parameters": {
+                    "prefix":{
+                        "value": "[parameters('resourceNamePrefix')]"
+                    },
+                    "suffix": {
+                        "value": "keyvault"
+                    },                   
+                    "resourceType": {
+                        "value": "Microsoft.KeyVault/vaults"
+                    },
+                    "resourceName": {
+                        "value": "[parameters('keyvaultName')]"
+                    },
+                    "groupType": {
+                        "value": "sqlServer"
+                    },
+                    "vnet" :{
+                        "value": "[parameters('spokevnetName')]"
+                    },
+                    "subnet": {
+                        "value": "[parameters('keyvaultSubnetName')]"
+                    },
+                    "privateDNSZoneName": {
+                        "value": "privatelink.vaultcore.azure.net"
+                    }
                 }
             }
     },
@@ -703,6 +799,33 @@
                     }
                 }
             }
+    },
+     {
+            "comments": "dnsvnetlink.json nested ARM template for Keyvault/Spoke link",
+            "name": "linkedTemplate-keyvault-hub-vnet-link",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-06-01",
+            "dependsOn": [
+                "linkedTemplate-keyvault-private-link"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "contentVersion": "1.0.0.0",
+                    "uri": "[variables('dnsvnetLinkNestedTemplateUri')]"
+                },
+                "parameters": {                   
+                    "vnet" :{
+                        "value": "[parameters('spokevnetName')]"
+                    },                    
+                    "suffix" : {
+                        "value": "akv-link"
+                    },
+                    "privateDNSZoneName": {
+                        "value": "privatelink.vaultcore.azure.net"
+                    }
+                }
+            }
     },        
     {
             "comments": "appgateway.json nested ARM template for App Gateway",
@@ -762,40 +885,6 @@
                     },
                     "allowTarget":{
                         "value": "[parameters('sqlSubnetPrefix')]"
-                    }
-                }
-            }
-    },
-    {
-            "comments": "keyvault.json nested ARM template for AKV",
-            "name": "linkedTemplate-keyvault",
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2020-06-01",
-            "dependsOn": [                
-                "linkedTemplate-webapp",
-                "linkedTemplate-hubspoke"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "contentVersion": "1.0.0.0",
-                    "uri": "[variables('akvNestedTemplateUri')]"
-                },
-                "parameters": {                   
-                    "keyVaultName":{
-                        "value": "[parameters('keyvaultname')]"
-                    },                    
-                    "ADUserObjectID":{
-                        "value": "[parameters('ADUserObjectID')]"
-                    },
-                    "webAppName":{
-                        "value": "[parameters('webAppName')]"
-                    },
-                    "secretname":{
-                        "value": "[variables('sqldbConnectionStringName')]"
-                    },
-                    "secretvalue":{
-                        "value": "[variables('secretsqlcnstr')]"
                     }
                 }
             }
