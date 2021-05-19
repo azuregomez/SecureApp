@@ -714,7 +714,7 @@
                         "value": "[parameters('keyvaultSubnetName')]"
                     },
                     "privateDNSZoneName": {
-                        "value": "privatelink.vaultcore.azure.net"
+                        "value": "privatelink.vault.azure.net"
                     }
                 }
             }
