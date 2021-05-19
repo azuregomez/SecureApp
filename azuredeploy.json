@@ -822,7 +822,7 @@
                         "value": "akv-link"
                     },
                     "privateDNSZoneName": {
-                        "value": "privatelink.vaultcore.azure.net"
+                        "value": "privatelink.vault.azure.net"
                     }
                 }
             }
