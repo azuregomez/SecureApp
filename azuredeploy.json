@@ -705,7 +705,7 @@
                         "value": "[parameters('keyvaultName')]"
                     },
                     "groupType": {
-                        "value": "sqlServer"
+                        "value": "vault"
                     },
                     "vnet" :{
                         "value": "[parameters('spokevnetName')]"

@@ -60,6 +60,12 @@
         "enabledForDiskEncryption": false,
         "enabledForTemplateDeployment": false,
         "tenantId": "[parameters('tenantId')]",
+         "networkAcls": {
+                    "bypass": "AzureServices",
+                    "defaultAction": "Deny",
+                    "ipRules": [],
+                    "virtualNetworkRules": []
+                },
         "accessPolicies": [
           {
             "tenantId": "[parameters('tenantId')]",
