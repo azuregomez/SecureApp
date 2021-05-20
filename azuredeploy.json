@@ -404,7 +404,8 @@
             "dependsOn": [                
                   "linkedTemplate-webapp",
                   "linkedTemplate-hubspoke",
-                  "linkedTemplate-msdeploy"
+                  "linkedTemplate-msdeploy",
+                  "linkedTemplate-keyvault-hub-vnet-link"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -714,7 +715,7 @@
                         "value": "[parameters('keyvaultSubnetName')]"
                     },
                     "privateDNSZoneName": {
-                        "value": "privatelink.vault.azure.net"
+                        "value": "privatelink.vaultcore.azure.net"
                     }
                 }
             }
@@ -822,7 +823,7 @@
                         "value": "akv-link"
                     },
                     "privateDNSZoneName": {
-                        "value": "privatelink.vault.azure.net"
+                        "value": "privatelink.vaultcore.azure.net"
                     }
                 }
             }
