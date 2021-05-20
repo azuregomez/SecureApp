@@ -13,7 +13,8 @@ Green field or .net application migration with a SQL Server back end the followi
 * Web Application Firewall in front of Web Application to protect against the top 10 OWASP threats
 * Outbound traffic from the Web App to SQL Database and other in-network resources (including on-premise) routed to a firewall for inspection.
 ## Architecture
-<img src="https://storagegomez.blob.core.windows.net/public/images/SecureApp_POC.png"/>
+![Secure PaaS](https://github.com/azuregomez/secureapp/blob/main/secureapp.png)
+
 This architecture leverages the following Azure Security features:
 
 Feature | Purpose | Reference
