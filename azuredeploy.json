@@ -404,8 +404,7 @@
             "dependsOn": [                
                   "linkedTemplate-webapp",
                   "linkedTemplate-hubspoke",
-                  "linkedTemplate-msdeploy",
-                  "linkedTemplate-keyvault-hub-vnet-link"
+                  "linkedTemplate-msdeploy"                 
             ],
             "properties": {
                 "mode": "Incremental",
@@ -458,7 +457,8 @@
             "dependsOn": [                
                 "linkedTemplate-webapp",
                 "linkedTemplate-keyvault",
-                "linkedTemplate-msdeploy"                
+                "linkedTemplate-msdeploy",
+                "linkedTemplate-keyvault-hub-vnet-link"                
             ],
             "properties": {
                 "mode": "Incremental",
