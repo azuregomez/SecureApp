@@ -37,11 +37,11 @@ This solution deploys a fully automated secure baseline Azure ARM Template + Pow
 ### Azure Resources deployed:
 * Hub and Spoke VNets with VNet peering.
 * App Gateway with WAF and Azure Firewall in the Hub VNet.
-* Azure Key Vault with SQL CnString as Secret.
-* Premium App Service Plan with Regional VNet Integration.
-* App Service with Manage Identity and Private Link.
-* SQL Database with Private Link.
-* Private DNS Zones for Private Endpoints.
+* Azure Key Vault with Private Endpoint and SQL CnString as Secret.
+* Premium App Service Plan with Regional VNet Integration and Private IP for outbound traffic.
+* App Service with Manage Identity and Private Endpoint.
+* SQL Database with Private Endpoint.
+* Private DNS Zones for all Private Endpoints.
 * Optional Route Table to send traffic from the application destined to SQL to the Azure Firewall.
 * A sample application (Athlete Roster) deployed as a package leveraging the MSDEPLOY extension.
 * A sample SQL DB schema with data that supports the sample application. Using a bacpac file.
@@ -66,7 +66,6 @@ Get-AzADUser or Get-AzADServicePrincipal.
 * Pre requisites: Azure Subscription with Contributor role, Powershell 5.1, Azure Cmdlets
 * App Gateway is deployed with a Public IP. This means the App Service is accessible from the internet through App Gateway.
 * The template as well as the powershell script follow an easy convention where all resources have the same prefix. The prefix is specified in the template parameters and all other parameters have a default derived from resourceprefix. The powershell script assumes this convention is followed.
-* For the most restrictive security, Azure Key Vault could have a Private Endpoint and VNet restrictions enabled. And allow only requests from the Private Endpoint. However, Key Vault References do not work yet with Regional VNet Integration - the Key Vault would get the request from one of the default Outbound public IPs of App Service. The temporary solution is to use Managed Service Identity as the security mechanism.
 * For the Kudu console, or Kudu REST API (deployment with Azure DevOps self-hosted agents for example), you must create two records in your Azure DNS private zone or your custom DNS server. 
 * To secure and inspect the traffic to Private Endpoints there are 2 caveats:
      * NSGs at the Private Endpoint subnets are NOT supported.
@@ -74,5 +73,5 @@ Get-AzADUser or Get-AzADServicePrincipal.
 https://blog.cloudtrooper.net/2020/05/23/filtering-traffic-to-private-endpoints-with-azure-firewall/
 * This architecture virtually injects an App Service into a VNet by allowing inbound trafffic exclusively from App Gateway and using a delegated subnet for Outbound access to SQL Azure DB, Storage and potentially to on-prem locations. For true VNet injection you must use an App Service Environment.
 ### What if I want the application to be ONLY available from my corporate Network?
-1. App Gateway needs to be deployed with an internal IP, not external.  If App Gateway is not desired and internal access is appropriate without a WAF, this can be accomplished through the private endpoint but if traffic comes from on-premise there has to be DNS forwarding or on-prem pinpoint DNS to resolve the private endpoint of the web application.
+1. App Gateway needs to be deployed with an internal IP.  If App Gateway is not desired and internal access is appropriate without a WAF, this can be accomplished through the private endpoint but if traffic comes from on-premise there has to be DNS forwarding or on-prem pinpoint DNS to resolve the private endpoint of the web application.
 2. For Hybrid connectivity: VPN or VNet Gateway (ExpressRoute).
