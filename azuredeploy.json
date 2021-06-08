@@ -167,6 +167,18 @@
             "description": "The pricing tier for the ASP (hosting plan)."
           }
         },
+        "isolatedAppServicePlanSKU":{
+            "type": "string",
+            "allowedValues": [           
+                "I1v2",
+                "I2v2",
+                "I3v2"
+            ],
+            "defaultValue": "I1V2",
+            "metadata": {
+                "description": "The pricing tier for the isolated ASP (hosting plan)."
+            }
+        },
         "appServicePlanCapacity": {
             "type": "int",
             "defaultValue": 1,
@@ -174,6 +186,13 @@
               "description": "Capacity."
             }
         },
+        "aseName": {
+            "type": "string",
+            "defaultValue": "[concat(parameters('resourceNamePrefix'),'-ase')]",
+            "metadata": {
+              "description": "The name of the ASE that will be created."
+            }
+        },       
         "webAppName": {
             "type": "string",
             "defaultValue": "[concat(parameters('resourceNamePrefix'),'Web')]",
@@ -253,6 +272,14 @@
         "azureFirewallName": {
             "type": "string",
             "defaultValue" : "[concat(parameters('resourceNamePrefix'),'-firewall')]"
+        },
+        "deployFirewall": {
+            "type": "bool",
+            "defaultValue": true
+        },
+        "isolatedAppService": {
+            "type": "bool",
+            "defaultValue": true
         }
     },
     "variables":{
@@ -267,6 +294,7 @@
       "vnetintegrationNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/vnetintegration.json', parameters('_artifactsLocationSasToken')))]",
       "akvNestedTemplateUri" : "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/keyvault.json', parameters('_artifactsLocationSasToken')))]",
       "webappNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/webapp.json', parameters('_artifactsLocationSasToken')))]",
+      "aseNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/asev3.json', parameters('_artifactsLocationSasToken')))]",
       "cnStrNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/cnstr.json', parameters('_artifactsLocationSasToken')))]",
       "msdeployNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/msdeploy.json', parameters('_artifactsLocationSasToken')))]",      
       "sqlnoPublicNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/sqlnopublic.json', parameters('_artifactsLocationSasToken')))]",      
@@ -370,6 +398,7 @@
             }
     },    
     {
+            "condition": "[equals(parameters('isolatedAppService'),false())]",
             "comments": "webapp.json nested ARM template for web application",
             "name": "linkedTemplate-webapp",
             "type": "Microsoft.Resources/deployments",
@@ -395,8 +424,49 @@
                     }
                 }
             }
-    },
+    },    
     {
+            "condition": "[parameters('isolatedAppService')]",
+            "comments": "webapp.json nested ARM template for ASE",
+            "name": "linkedTemplate-ase",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-06-01",  
+             "dependsOn": [                
+                "linkedTemplate-hubspoke"
+            ],          
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "contentVersion": "1.0.0.0",
+                    "uri": "[variables('aseNestedTemplateUri')]"
+                },
+                "parameters": {    
+                    "aseName": {
+                        "value": "[parameters('aseName')]"
+                    },
+                    "vnetName": {
+                        "value": "[parameters('spokeVnetName')]"
+                    },
+                    "outboundSubnetName": {
+                        "value": "[parameters('appServiceOutboundSubnetName')]"
+                    },
+                    "webAppName":{
+                        "value": "[parameters('webAppName')]"
+                    },
+                    "appServicePlanName":{
+                        "value": "[parameters('appServicePlanName')]"
+                    },
+                    "appServicePlanSKU":{
+                        "value": "[parameters('isolatedAppServicePlanSKU')]"
+                    },
+                    "appServicePlanCapacity":{
+                        "value": "[parameters('appServicePlanCapacity')]"
+                    }
+                }
+            }
+    },
+    {               
+             "condition": "[equals(parameters('isolatedAppService'),false())]",
             "comments": "vnetintegration.json nested ARM template for web application",
             "name": "linkedTemplate-vnetintegration",
             "type": "Microsoft.Resources/deployments",
@@ -431,7 +501,8 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2020-06-01",
             "dependsOn": [                
-                "linkedTemplate-webapp"                           
+                "linkedTemplate-webapp",
+                "linkedTemplate-ase" 
             ],
             "properties": {
                 "mode": "Incremental",
@@ -456,6 +527,7 @@
             "apiVersion": "2020-06-01",
             "dependsOn": [                
                 "linkedTemplate-webapp",
+                "linkedTemplate-ase",
                 "linkedTemplate-keyvault",
                 "linkedTemplate-msdeploy",
                 "linkedTemplate-keyvault-hub-vnet-link"                
@@ -480,6 +552,7 @@
             }
     },
     {
+        "condition": "[equals(parameters('isolatedAppService'),false())]",
             "comments": "privatelink.json nested ARM template for Web",
             "name": "linkedTemplate-web-private-link",
             "type": "Microsoft.Resources/deployments",
@@ -518,6 +591,53 @@
                     },
                     "privateDNSZoneName": {
                         "value": "privatelink.azurewebsites.net"
+                    }
+                }
+            }
+    },
+    {
+        "condition": "[parameters('isolatedAppService')]",
+            "comments": "privatelink.json nested ARM template for ASE",
+            "name": "linkedTemplate-ase-private-link",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-06-01",
+            "dependsOn": [
+                "linkedTemplate-hubspoke",
+                "linkedTemplate-ase"                
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "contentVersion": "1.0.0.0",
+                    "uri": "[variables('privateLinkNestedTemplateUri')]"
+                },
+                "parameters": {
+                    "prefix":{
+                        "value": "[parameters('resourceNamePrefix')]"
+                    },
+                    "suffix": {
+                        "value": "ase"
+                    },                   
+                    "resourceType": {
+                        "value": "Microsoft.Web/hostingEnvironments"
+                    },
+                    "resourceName": {
+                        "value": "[parameters('aseName')]"
+                    },
+                    "groupType": {
+                        "value": "hostingEnvironments"
+                    },
+                    "vnet" :{
+                        "value": "[parameters('spokevnetName')]"
+                    },
+                    "subnet": {
+                        "value": "[parameters('appServiceInboundSubnetName')]"
+                    },                    
+                    "privateDNSZoneName": {
+                        "value": "privatelink.nodeploy"
+                    },
+                    "createDNSzone" :{
+                        "value": false
                     }
                 }
             }
@@ -861,6 +981,7 @@
             }
     },
     {
+            "condition": "[parameters('deployFirewall')]",
             "comments": "firewall.json nested ARM template for Az Firewall",
             "name": "linkedTemplate-azfirewall",
             "type": "Microsoft.Resources/deployments",
