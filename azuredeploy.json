@@ -770,6 +770,7 @@
             "apiVersion": "2020-06-01",
             "dependsOn": [                
                 "linkedTemplate-webapp",
+                "linkedTemplate-ase",
                 "linkedTemplate-hubspoke"
             ],
             "properties": {
@@ -841,6 +842,7 @@
             }
     },
     {
+        "condition": "[equals(parameters('isolatedAppService'),false())]",
             "comments": "dnsvnetlink.json nested ARM template for Web/Spoke",
             "name": "linkedTemplate-web-spoke-vnet-link",
             "type": "Microsoft.Resources/deployments",
@@ -868,6 +870,7 @@
             }
     },
     {
+        "condition": "[equals(parameters('isolatedAppService'),false())]",
             "comments": "dnsvnetlink.json nested ARM template for Web/Hub",
             "name": "linkedTemplate-web-hub-vnet-link",
             "type": "Microsoft.Resources/deployments",

@@ -65,7 +65,7 @@
                 "vnetSubnetName": "[parameters('outboundSubnetName')]",
                 "virtualNetwork": {
                     "id": "[variables('vnetid')]",
-                    "subnet": "ase-outbound"
+                    "subnet": "[parameters('outboundSubnetName')]"
                 },
                 "internalLoadBalancingMode": "Web, Publishing",                
                 "ipsslAddressCount": 0,
