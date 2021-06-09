@@ -84,7 +84,7 @@
             ],               
             "properties": {
                 "hostingEnvironmentProfile": {
-                  "id": "string"
+                  "id": "[resourceId('Microsoft.Web/hostingEnvironments', parameters('asename'))]"
                 }
             },
             "sku": {
