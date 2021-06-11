@@ -49,8 +49,8 @@
                 "name": "[parameters('appServicePlanName')]"          
             },
             "sku": {
-                "name": "[concat(parameters('appServicePlanSKU'))]",         
-                "capacity": "[parameters('appServicePlanCapacity')]"
+            "name": "[concat(parameters('appServicePlanSKU'))]",         
+            "capacity": "[parameters('appServicePlanCapacity')]"
             }
         },
         {
