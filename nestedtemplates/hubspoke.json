@@ -117,7 +117,10 @@
                   {
                       "name": "delegation",                      
                       "properties": {
-                          "serviceName": "Microsoft.Web/hostingEnvironments"                          
+                          "serviceName": "Microsoft.Web/serverfarms",
+                          "actions": [
+                              "Microsoft.Network/virtualNetworks/subnets/action"
+                          ]
                       }
                   }
               ]
