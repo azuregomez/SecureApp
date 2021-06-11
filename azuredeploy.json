@@ -253,6 +253,10 @@
         "azureFirewallName": {
             "type": "string",
             "defaultValue" : "[concat(parameters('resourceNamePrefix'),'-firewall')]"
+        },
+        "deployFirewall": {
+            "type": "bool",
+            "defaultValue": true
         }
     },
     "variables":{
@@ -861,6 +865,7 @@
             }
     },
     {
+            "condition": "[parameters('deployFirewall')]",
             "comments": "firewall.json nested ARM template for Az Firewall",
             "name": "linkedTemplate-azfirewall",
             "type": "Microsoft.Resources/deployments",
