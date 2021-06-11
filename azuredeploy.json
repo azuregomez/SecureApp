@@ -170,9 +170,9 @@
         "isolatedAppServicePlanSKU":{
             "type": "string",
             "allowedValues": [           
-                "I1V2",
-                "I2V2",
-                "I3V2"
+                "I1v2",
+                "I2v2",
+                "I3v2"
             ],
             "defaultValue": "I1V2",
             "metadata": {
