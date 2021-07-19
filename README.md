@@ -60,8 +60,8 @@ You can obtain this with Powershell cmdlets:
 ```
 Get-AzADUser or Get-AzADServicePrincipal.
 ```
-3. Run azudereploy.json
-4. Run enablefirewallroute.json (only if you want to send traffic from the app with destination SQL DB to the Azure Firewall)
+3. Run azudereploy.ps1
+4. Run enablefirewallroute.ps1 (only if you want to send traffic from the app with destination SQL DB to the Azure Firewall)
 ## Release Notes
 * Pre requisites: Azure Subscription with Contributor role, Powershell 5.1, Azure Cmdlets
 * App Gateway is deployed with a Public IP. This means the App Service is accessible from the internet through App Gateway.
