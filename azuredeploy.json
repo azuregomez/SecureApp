@@ -840,7 +840,8 @@
             "dependsOn": [                
                 "linkedTemplate-hubspoke",
                 "linkedTemplate-webapp",
-                "linkedTemplate-web-hub-vnet-link"
+                "linkedTemplate-web-hub-vnet-link",
+                "linkedTemplate-cnstr"
             ],
             "properties": {
                 "mode": "Incremental",
