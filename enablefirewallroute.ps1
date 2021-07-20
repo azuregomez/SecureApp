@@ -1,5 +1,8 @@
-$localpath = "{your local directory}"
-$templateparamfile = $localpath + "azuredeploy.parameters.json"
+# .\enablefirewallroute.ps1 -Parameterfile azuredeploy.parameters.local.json    
+Param(
+    [string] $ParameterFile = 'azuredeploy.parameters.json'
+)
+$templateParamFile = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, $ParameterFile))
 $params = get-content $templateparamfile | ConvertFrom-Json
 $prefix = $params.parameters.resourcenameprefix.value
 $rgname = $prefix + "-rg"

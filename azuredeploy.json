@@ -185,7 +185,7 @@
           "type": "string",
           "defaultValue": "https://storagegomez.blob.core.windows.net/public/persondemo.zip",
            "metadata": {
-              "description": "The zip file of the codes."
+              "description": "The zip file of the code."
             }
         },       
         "sqlServerName": {
@@ -400,6 +400,30 @@
                 }
             }
     },
+     {
+            "comments": "msdeploy.json nested ARM template for package deployment",
+            "name": "linkedTemplate-msdeploy",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-06-01",
+            "dependsOn": [                
+                "linkedTemplate-webapp"                           
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "contentVersion": "1.0.0.0",
+                    "uri": "[variables('msdeployNestedTemplateUri')]"
+                },
+                "parameters": {                   
+                    "webAppName":{
+                        "value": "[parameters('webAppName')]"
+                    },
+                    "packageUri":{
+                        "value": "[parameters('sourceCodeZipUrl')]"
+                    }
+                }
+            }
+    },
     {
             "comments": "vnetintegration.json nested ARM template for web application",
             "name": "linkedTemplate-vnetintegration",
@@ -428,31 +452,7 @@
                     }
                 }
             }
-    },
-    {
-            "comments": "msdeploy.json nested ARM template for package deployment",
-            "name": "linkedTemplate-msdeploy",
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2020-06-01",
-            "dependsOn": [                
-                "linkedTemplate-webapp"                           
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "contentVersion": "1.0.0.0",
-                    "uri": "[variables('msdeployNestedTemplateUri')]"
-                },
-                "parameters": {                   
-                    "webAppName":{
-                        "value": "[parameters('webAppName')]"
-                    },
-                    "packageUri":{
-                        "value": "[parameters('sourceCodeZipUrl')]"
-                    }
-                }
-            }
-    },
+    },   
     {
             "comments": "cnstr.json nested ARM template for connection string",
             "name": "linkedTemplate-cnstr",

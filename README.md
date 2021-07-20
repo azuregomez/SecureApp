@@ -60,7 +60,7 @@ You can obtain this with Powershell cmdlets:
 ```
 Get-AzADUser or Get-AzADServicePrincipal.
 ```
-3. Run azudereploy.ps1
+3. Run azudereploy.ps1 -Location "East US" // or the chosen deployment location
 4. Run enablefirewallroute.ps1 (only if you want to send traffic from the app with destination SQL DB to the Azure Firewall)
 ## Release Notes
 * Pre requisites: Azure Subscription with Contributor role, Powershell 5.1, Azure Cmdlets
@@ -71,7 +71,7 @@ Get-AzADUser or Get-AzADServicePrincipal.
      * NSGs at the Private Endpoint subnets are NOT supported.
      * Creating Private Link Endpoints injects /32 routes into your Azure subnets. Therefore you want to create User-Defined Routes for your endpoint using specific /32 prefixes too (otherwise, the most specific prefix will win).  This is exactly what enablefirewallroute.ps1 does.
 https://blog.cloudtrooper.net/2020/05/23/filtering-traffic-to-private-endpoints-with-azure-firewall/
-* This architecture virtually injects an App Service into a VNet by allowing inbound trafffic exclusively from App Gateway and using a delegated subnet for Outbound access to SQL Azure DB, Storage and potentially to on-prem locations. For true VNet injection you must use an App Service Environment.
+* This architecture virtually injects an App Service into a VNet by allowing inbound traffic exclusively from App Gateway and using a delegated subnet for Outbound access to SQL Azure DB, Storage and potentially to on-prem locations. For true VNet injection you must use an App Service Environment.
 ### What if I want the application to be ONLY available from my corporate Network?
 1. App Gateway needs to be deployed with an internal IP.  If App Gateway is not desired and internal access is appropriate without a WAF, this can be accomplished through the private endpoint but if traffic comes from on-premise there has to be DNS forwarding or on-prem pinpoint DNS to resolve the private endpoint of the web application.
 2. For Hybrid connectivity: VPN or VNet Gateway (ExpressRoute).
