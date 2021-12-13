@@ -68,7 +68,7 @@ Get-AzADUser or Get-AzADServicePrincipal.
 * The template as well as the powershell script follow an easy convention where all resources have the same prefix. The prefix is specified in the template parameters and all other parameters have a default derived from resourceprefix. The powershell script assumes this convention is followed.
 * For the Kudu console, or Kudu REST API (deployment with Azure DevOps self-hosted agents for example), you must create two records in your Azure DNS private zone or your custom DNS server. 
 * To secure and inspect the traffic to Private Endpoints there are 2 caveats:
-     * NSGs at the Private Endpoint subnets are NOT supported.
+     * NSGs at the Private Endpoint subnets are in Public Preview.
      * Creating Private Link Endpoints injects /32 routes into your Azure subnets. Therefore you want to create User-Defined Routes for your endpoint using specific /32 prefixes too (otherwise, the most specific prefix will win).  This is exactly what enablefirewallroute.ps1 does.
 https://blog.cloudtrooper.net/2020/05/23/filtering-traffic-to-private-endpoints-with-azure-firewall/
 * This architecture virtually injects an App Service into a VNet by allowing inbound traffic exclusively from App Gateway and using a delegated subnet for Outbound access to SQL Azure DB, Storage and potentially to on-prem locations. For true VNet injection you must use an App Service Environment.
